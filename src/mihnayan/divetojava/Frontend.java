@@ -1,6 +1,7 @@
 package mihnayan.divetojava;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -13,11 +14,20 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 public class Frontend extends AbstractHandler implements Runnable {
 	
 	private static Logger log = Logger.getLogger(Frontend.class.getName());
+	
+	private AtomicInteger handleCount;
+	
+	public Frontend() {
+		super();
+		handleCount = new AtomicInteger();
+	}
 
 	@Override
 	public void handle(String target, Request baseRequest,
 			HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
+		
+		handleCount.incrementAndGet();
 		
 		String page = "<!DOCTYPE html><html>"
 				+ "<head><meta charset=\"UTF-8\">"
@@ -35,9 +45,6 @@ public class Frontend extends AbstractHandler implements Runnable {
 		response.setStatus(HttpServletResponse.SC_OK);
 		
 		response.getWriter().println(page);
-		
-		log.info("Frontend handler was called");
-
 	}
 
 	@Override
@@ -48,7 +55,7 @@ public class Frontend extends AbstractHandler implements Runnable {
 			} catch(InterruptedException e) {
 				return;
 			}
-			log.info("Thread " + Thread.currentThread().getName() + " was wake up");
+			log.info("This page was handled " + handleCount + " times...");
 		}
 	}
 
