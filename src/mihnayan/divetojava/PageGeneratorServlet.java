@@ -19,12 +19,12 @@ public class PageGeneratorServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		
-		HttpSession session = req.getSession(false);
+		HttpSession session = req.getSession();
 		
 		resp.setContentType("text/html;charset=utf-8");
 		resp.setStatus(HttpServletResponse.SC_OK);
 		
-		if (session != null)
+		if (!session.isNew())
 			resp.getWriter().println(getPage(session.getId()));
 		else
 			resp.getWriter().println(getHelloPage());
