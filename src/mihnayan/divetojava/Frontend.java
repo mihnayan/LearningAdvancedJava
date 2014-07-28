@@ -2,11 +2,13 @@ package mihnayan.divetojava;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -27,24 +29,19 @@ public class Frontend extends AbstractHandler implements Runnable {
 			HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
 		
+		baseRequest.setHandled(true);
+		
 		handleCount.incrementAndGet();
 		
-		String page = "<!DOCTYPE html><html>"
-				+ "<head><meta charset=\"UTF-8\">"
-				+ "<title>Page generator test</title></head>"
-				+ "<body>"
-				+ "<h2>Hello, from Frontend!</h2>"
-				+ "<script>"
-				+ "window.onload = function () {"
-				+ "    setInterval('location.reload(true)', 1000);"
-				+ "};"
-				+ "</script>"
-				+ "</body></html>";
+		try {
+			response.setContentType("text/html;charset=utf-8");
+			response.setStatus(HttpServletResponse.SC_OK);
 		
-		response.setContentType("text/html;charset=utf-8");
-		response.setStatus(HttpServletResponse.SC_OK);
-		
-		response.getWriter().println(page);
+			response.getWriter().println(getPage(request.getSession()));
+		} catch (Exception e) {
+			log.log(Level.SEVERE, e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -57,6 +54,25 @@ public class Frontend extends AbstractHandler implements Runnable {
 			}
 			log.info("This page was handled " + handleCount + " times...");
 		}
+	}
+	
+	private String getPage(HttpSession session) {
+		
+		String page = "<!DOCTYPE html><html>"
+				+ "<head><meta charset=\"UTF-8\">"
+				+ "<title>Page generator test</title></head>"
+				+ "<body>"
+				+ "<h2>Hello, from Frontend!</h2>"
+				+ "<p>Your sessionId: " + session.getId() + "</p>"
+//				+ "<script>"
+//				+ "window.onload = function () {"
+//				+ "    setInterval('location.reload(true)', 1000);"
+//				+ "};"
+//				+ "</script>"
+				+ "</body></html>";
+		
+		return page;
+		
 	}
 
 }

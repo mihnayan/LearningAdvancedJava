@@ -24,10 +24,10 @@ public class PageGeneratorServlet extends HttpServlet {
 		resp.setContentType("text/html;charset=utf-8");
 		resp.setStatus(HttpServletResponse.SC_OK);
 		
-		if (!session.isNew())
-			resp.getWriter().println(getPage(session.getId()));
-		else
-			resp.getWriter().println(getHelloPage());
+//		if (!session.isNew())
+//			resp.getWriter().println(getPage(session.getId()));
+//		else
+//			resp.getWriter().println(getHelloPage());
 	}
 
 	@Override
