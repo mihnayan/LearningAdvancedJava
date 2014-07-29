@@ -19,6 +19,12 @@ public class Frontend extends AbstractHandler implements Runnable {
 	
 	private AtomicInteger handleCount;
 	
+	private final String _htmlHeader = "<!DOCTYPE html><html>"
+				+ "<head><meta charset=\"UTF-8\">";
+	
+	// field for user name in html form
+	private final String FRM_USER_NAME = "user-name";
+	
 	public Frontend() {
 		super();
 		handleCount = new AtomicInteger();
@@ -33,11 +39,16 @@ public class Frontend extends AbstractHandler implements Runnable {
 		
 		handleCount.incrementAndGet();
 		
+		HttpSession session;
+		String userName = request.getParameter(FRM_USER_NAME);
+		
 		try {
+			session = request.getSession();
 			response.setContentType("text/html;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
-		
-			response.getWriter().println(getPage(request.getSession()));
+			
+			response.getWriter().println(buildPage(session, userName));
+			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, e.getMessage());
 			e.printStackTrace();
@@ -56,14 +67,24 @@ public class Frontend extends AbstractHandler implements Runnable {
 		}
 	}
 	
-	private String getPage(HttpSession session) {
+	private String buildPage(HttpSession session, String userName) {
+		if (session.isNew()) return welcomePage(session);
 		
-		String page = "<!DOCTYPE html><html>"
-				+ "<head><meta charset=\"UTF-8\">"
-				+ "<title>Page generator test</title></head>"
+		return "Your session is not new :-) And your name is " + userName;
+	}
+	
+	private String welcomePage(HttpSession session) {
+		
+		String page = _htmlHeader
+				+ "<title>Advanced Java: Welcome</title></head>"
 				+ "<body>"
-				+ "<h2>Hello, from Frontend!</h2>"
+				+ "<h2>Welcom to Advanced Java course!</h2>"
 				+ "<p>Your sessionId: " + session.getId() + "</p>"
+				+ "<form method=\"post\">"
+				+ "<label for=\"user-name-id\">Enter your name, please:</label>"
+				+ "<input type=\"text\" id=\"user-name-id\" name=\"user-name\">"
+				+ "<input type=\"submit\">"
+				+ "</form>"
 //				+ "<script>"
 //				+ "window.onload = function () {"
 //				+ "    setInterval('location.reload(true)', 1000);"
