@@ -17,10 +17,6 @@ public class DTJServer {
 		Thread thread = new Thread(frontend);
 		thread.start();
 		
-		AccountServer accountServer = new AccountServer();
-		Thread accountServerThread = new Thread(accountServer);
-		accountServerThread.start();
-		
 		ResourceHandler contentHandler = new ResourceHandler();
 		contentHandler.setDirectoriesListed(false);
 		contentHandler.setWelcomeFiles(new String[] { "index.html" });

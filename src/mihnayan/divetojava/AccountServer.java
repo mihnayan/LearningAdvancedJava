@@ -11,6 +11,10 @@ public class AccountServer implements Runnable {
 		
 		return 0;
 	}
+	
+	public boolean isValidUserName(String userName) {
+		return userName != null && userName.trim() != "";
+	}
 
 	@Override
 	public void run() {

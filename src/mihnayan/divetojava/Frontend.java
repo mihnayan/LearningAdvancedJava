@@ -18,6 +18,8 @@ public class Frontend extends AbstractHandler implements Runnable {
 	private static Logger log = Logger.getLogger(Frontend.class.getName());
 	
 	private AtomicInteger handleCount;
+	private AccountServer accountServer;
+	private String error;
 	
 	private final String _htmlHeader = "<!DOCTYPE html><html>"
 				+ "<head><meta charset=\"UTF-8\">";
@@ -28,6 +30,12 @@ public class Frontend extends AbstractHandler implements Runnable {
 	public Frontend() {
 		super();
 		handleCount = new AtomicInteger();
+		
+		accountServer = new AccountServer();
+		Thread accountServerThread = new Thread(accountServer);
+		accountServerThread.start();
+		
+		error = "";
 	}
 
 	@Override
@@ -70,6 +78,11 @@ public class Frontend extends AbstractHandler implements Runnable {
 	private String buildPage(HttpSession session, String userName) {
 		if (session.isNew()) return welcomePage(session);
 		
+		if (!accountServer.isValidUserName(userName)) {
+			error = "Your name is not valid: " + userName;
+			return welcomePage(session);
+		}
+		
 		return "Your session is not new :-) And your name is " + userName;
 	}
 	
@@ -78,6 +91,7 @@ public class Frontend extends AbstractHandler implements Runnable {
 		String page = _htmlHeader
 				+ "<title>Advanced Java: Welcome</title></head>"
 				+ "<body>"
+				+ getError(true)
 				+ "<h2>Welcom to Advanced Java course!</h2>"
 				+ "<p>Your sessionId: " + session.getId() + "</p>"
 				+ "<form method=\"post\">"
@@ -93,7 +107,14 @@ public class Frontend extends AbstractHandler implements Runnable {
 				+ "</body></html>";
 		
 		return page;
+	}
+	
+	private String getError(boolean clear) {
+		if (error == "") return "";
+		String err = error;
+		if (clear) error = "";
 		
+		return "<div class=\"status\">" + err + "</div>";
 	}
 
 }
