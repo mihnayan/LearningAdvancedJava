@@ -47,15 +47,11 @@ public class Frontend extends AbstractHandler implements Runnable {
 		
 		handleCount.incrementAndGet();
 		
-		HttpSession session;
-		String userName = request.getParameter(FRM_USER_NAME);
-		
 		try {
-			session = request.getSession();
 			response.setContentType("text/html;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			
-			response.getWriter().println(buildPage(session, userName));
+			response.getWriter().println(buildPage(request));
 			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, e.getMessage());
@@ -75,20 +71,28 @@ public class Frontend extends AbstractHandler implements Runnable {
 		}
 	}
 	
-	private String buildPage(HttpSession session, String userName) {
+	private String buildPage(HttpServletRequest request) {
+		
+		HttpSession session = request.getSession();
+		
 		if (session.isNew()) return welcomePage(session);
 		
-		if (!accountServer.isValidUserName(userName)) {
-			error = "Your name is not valid: " + userName;
-			return welcomePage(session);
+		String userName = (String) session.getAttribute("userName");
+		if (userName == null) {
+			userName = request.getParameter(FRM_USER_NAME);
+			if (!accountServer.isValidUserName(userName)) {
+				error = "Your name is not valid: " + userName;
+				return welcomePage(session);
+			} else {
+				session.setAttribute("userName", userName);
+				accountServer.login(userName);
+			}
 		}
-		
-		accountServer.login(userName);
 		
 		if (accountServer.isLogged(userName) == AccountServer.WAITING)
 			return idlePage("Wait for authorization, please...");
 		
-		return "Your session is not new :-) And your name is " + userName;
+		return "You were successfully authenticated :-) And your name is " + userName;
 	}
 	
 	private String welcomePage(HttpSession session) {
@@ -104,11 +108,6 @@ public class Frontend extends AbstractHandler implements Runnable {
 				+ "<input type=\"text\" id=\"user-name-id\" name=\"user-name\">"
 				+ "<input type=\"submit\">"
 				+ "</form>"
-//				+ "<script>"
-//				+ "window.onload = function () {"
-//				+ "    setInterval('location.reload(true)', 1000);"
-//				+ "};"
-//				+ "</script>"
 				+ "</body></html>";
 		
 		return page;
@@ -119,6 +118,11 @@ public class Frontend extends AbstractHandler implements Runnable {
 				+ "<title>Advanced Java: idle...</title></head>"
 				+ "<body>\n"
 				+ "<p>" + message + "</p>"
+				+ "<script>"
+				+ "window.onload = function () {"
+				+ "    setInterval('location.reload(true)', 1000);"
+				+ "};"
+				+ "</script>"
 				+ "</body></html>";
 	}
 	
