@@ -83,6 +83,11 @@ public class Frontend extends AbstractHandler implements Runnable {
 			return welcomePage(session);
 		}
 		
+		accountServer.login(userName);
+		
+		if (accountServer.isLogged(userName) == AccountServer.WAITING)
+			return idlePage("Wait for authorization, please...");
+		
 		return "Your session is not new :-) And your name is " + userName;
 	}
 	
@@ -107,6 +112,14 @@ public class Frontend extends AbstractHandler implements Runnable {
 				+ "</body></html>";
 		
 		return page;
+	}
+	
+	private String idlePage(String message) {
+		return _htmlHeader
+				+ "<title>Advanced Java: idle...</title></head>"
+				+ "<body>\n"
+				+ "<p>" + message + "</p>"
+				+ "</body></html>";
 	}
 	
 	private String getError(boolean clear) {
