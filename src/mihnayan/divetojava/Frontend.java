@@ -120,7 +120,7 @@ public class Frontend extends AbstractHandler implements Runnable {
 				+ "<p>" + message + "</p>"
 				+ "<script>"
 				+ "window.onload = function () {"
-				+ "    setInterval('location.reload(true)', 1000);"
+				+ "    setInterval('location.replace(location.href)', 1000);"
 				+ "};"
 				+ "</script>"
 				+ "</body></html>";
