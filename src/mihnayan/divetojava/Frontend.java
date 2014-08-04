@@ -1,6 +1,7 @@
 package mihnayan.divetojava;
 
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,8 +18,9 @@ public class Frontend extends AbstractHandler implements Runnable {
 	
 	private static Logger log = Logger.getLogger(Frontend.class.getName());
 	
+	private ConcurrentHashMap<String, Integer> users;
+	
 	private AtomicInteger handleCount;
-	private AccountServer accountServer;
 	private String error;
 	
 	private final String _htmlHeader = "<!DOCTYPE html><html>"
@@ -30,10 +32,7 @@ public class Frontend extends AbstractHandler implements Runnable {
 	public Frontend() {
 		super();
 		handleCount = new AtomicInteger();
-		
-		accountServer = new AccountServer();
-		Thread accountServerThread = new Thread(accountServer);
-		accountServerThread.start();
+		users = new ConcurrentHashMap<String, Integer>();
 		
 		error = "";
 	}
@@ -80,19 +79,24 @@ public class Frontend extends AbstractHandler implements Runnable {
 		String userName = (String) session.getAttribute("userName");
 		if (userName == null) {
 			userName = request.getParameter(FRM_USER_NAME);
-			if (!accountServer.isValidUserName(userName)) {
-				error = "Your name is not valid: " + userName;
-				return welcomePage(session);
-			} else {
+			if (AccountServer.isValidUserName(userName)) {
 				session.setAttribute("userName", userName);
-				accountServer.login(userName);
+				login(userName);
+			} else {
+				error = "Your name is not valid: " + userName;
+				return welcomePage(session);				
 			}
 		}
 		
-		if (accountServer.isLogged(userName) == AccountServer.WAITING)
+		//TODO: allow the user to re-enter the registration data
+		if (!users.containsKey(userName))
+			return "You can not be authenticated!" + users.toString();
+		
+		if (users.get(userName) == 0)
 			return idlePage("Wait for authorization, please...");
 		
-		return "You were successfully authenticated :-) And your name is " + userName;
+		return "You were successfully authenticated :-) And your name is <strong>" + userName
+				+ "</strong>. And you userId is " + users.get(userName);
 	}
 	
 	private String welcomePage(HttpSession session) {
@@ -132,6 +136,14 @@ public class Frontend extends AbstractHandler implements Runnable {
 		if (clear) error = "";
 		
 		return "<div class=\"status\">" + err + "</div>";
+	}
+	
+	private void login(String userName) {
+		users.put(userName, 0);
+		
+		AccountServer accountServer = new AccountServer(users, userName);
+		Thread accountServerThread = new Thread(accountServer);
+		accountServerThread.start();
 	}
 
 }
