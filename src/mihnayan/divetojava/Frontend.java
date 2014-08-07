@@ -18,7 +18,8 @@ public class Frontend extends AbstractHandler implements Runnable {
 	
 	private static Logger log = Logger.getLogger(Frontend.class.getName());
 	
-	private ConcurrentHashMap<String, Integer> users;
+	private static ConcurrentHashMap<String, Integer> authenticatedSessions = 
+			new ConcurrentHashMap<String, Integer>();
 	
 	private AtomicInteger handleCount;
 	private String error;
@@ -32,7 +33,6 @@ public class Frontend extends AbstractHandler implements Runnable {
 	public Frontend() {
 		super();
 		handleCount = new AtomicInteger();
-		users = new ConcurrentHashMap<String, Integer>();
 		
 		error = "";
 	}
@@ -73,40 +73,42 @@ public class Frontend extends AbstractHandler implements Runnable {
 	private String buildPage(HttpServletRequest request) {
 		
 		HttpSession session = request.getSession();
+		String sessionId = session.getId();
 		
-		if (session.isNew()) return welcomePage(session);
+		if (session.isNew()) return welcomePage(sessionId);
 		
 		String userName = (String) session.getAttribute("userName");
 		if (userName == null) {
 			userName = request.getParameter(FRM_USER_NAME);
 			if (AccountServer.isValidUserName(userName)) {
 				session.setAttribute("userName", userName);
-				login(userName);
+				authenticatedSessions.put(sessionId, AccountServer.WAITING);
+				login(userName, sessionId, authenticatedSessions);
 			} else {
 				error = "Your name is not valid: " + userName;
-				return welcomePage(session);				
+				return welcomePage(sessionId);				
 			}
 		}
 		
 		//TODO: allow the user to re-enter the registration data
-		if (!users.containsKey(userName))
-			return "You can not be authenticated!" + users.toString();
+		if (!authenticatedSessions.containsKey(sessionId))
+			return "You can not be authenticated! " + userName;
 		
-		if (users.get(userName) == 0)
+		if (authenticatedSessions.get(sessionId) == AccountServer.WAITING)
 			return idlePage("Wait for authorization, please...");
 		
 		return "You were successfully authenticated :-) And your name is <strong>" + userName
-				+ "</strong>. And you userId is " + users.get(userName);
+				+ "</strong>. And you userId is " + authenticatedSessions.get(sessionId);
 	}
 	
-	private String welcomePage(HttpSession session) {
+	private String welcomePage(String sessionId) {
 		
 		String page = _htmlHeader
 				+ "<title>Advanced Java: Welcome</title></head>"
 				+ "<body>"
 				+ getError(true)
 				+ "<h2>Welcom to Advanced Java course!</h2>"
-				+ "<p>Your sessionId: " + session.getId() + "</p>"
+				+ "<p>Your sessionId: " + sessionId + "</p>"
 				+ "<form method=\"post\">"
 				+ "<label for=\"user-name-id\">Enter your name, please:</label>"
 				+ "<input type=\"text\" id=\"user-name-id\" name=\"user-name\">"
@@ -138,10 +140,10 @@ public class Frontend extends AbstractHandler implements Runnable {
 		return "<div class=\"status\">" + err + "</div>";
 	}
 	
-	private void login(String userName) {
-		users.put(userName, 0);
+	private void login(String userName, String sessionId, 
+			ConcurrentHashMap<String, Integer> sessions) {
 		
-		AccountServer accountServer = new AccountServer(users, userName);
+		AccountServer accountServer = new AccountServer(userName, sessionId, sessions);
 		Thread accountServerThread = new Thread(accountServer);
 		accountServerThread.start();
 	}

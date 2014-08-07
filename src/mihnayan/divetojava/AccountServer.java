@@ -1,32 +1,26 @@
 package mihnayan.divetojava;
 
 import java.util.HashMap;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-//TODO: Find and return useId by username
-//TODO: userDb implemented by HashMap
-
-//TODO: pass HashMap with session-userId from Frontend. AccountServer must to change the HashMap
-//after finding userId
+/**
+ * Class which authenticates a specific user for a specific session. Authentication is starts 
+ * after invoking start() method of class.  After success end of process puts user ID in the 
+ * sessions HashMap for specific session. If user has not been authenticated removes record 
+ * from the map for the session.
+ * @author Mikhail Mangushev
+ *
+ */
 public class AccountServer implements Runnable {
 	
-	public final static int NOT_LOGGED = -1;
 	public final static int WAITING = 0;
-	public final static int LOGGED = 2;
 	
-	private ConcurrentHashMap<String, Integer> users;
 	private String userName;
+	private String sessionId;
+	private ConcurrentHashMap<String, Integer> sessions;
 	
-	private HashMap<String, Integer> userDb;
-	
-	public AccountServer(ConcurrentHashMap<String, Integer> users, String userName) {
-		super();
-		
-		this.users = users;
-		this.userName = userName;
-		
+	private static HashMap<String, Integer> userDb = new HashMap<String, Integer>();
+	static {
 		userDb = new HashMap<String, Integer>();
 		userDb.put("Anakin Skywalker", 1);
 		userDb.put("Yoda", 2);
@@ -35,50 +29,29 @@ public class AccountServer implements Runnable {
 	}
 	
 	/**
-	 * Starts the process of user authentication
-	 * @param userName a unique user name
+	 * Helper method to spell-check the user name
+	 * @param userName The username
+	 * @return True or False
 	 */
-	public void login(String userName) {
-		users.put(userName, 0);
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		users.replace(userName, 1);
-	}
-	
-	/**
-	 * Checks user authentication state
-	 * @param userName a unique user name
-	 * @return AccountServer.NOT_LOGGED if the user has not been authenticated;<br /> 
-	 * AccountServer.WAITING if not finished the process of authenticating the user;<br />
-	 * AccountServer.LOGGED if the user has been authenticated
-	 */
-//	public int loginStatus(String userName) {
-//		if (registeredUsers.contains(userName))
-//			return LOGGED;
-//		
-//		return WAITING;
-//	}
-//	
-	/**
-	 * Returns 0 if user has not been authenticated. Otherwise returns the user Id.
-	 * @param userName a unique user name
-	 * @return user Id
-	 */
-//	public int getUserId(String userName) {
-//		if (loginStatus(userName) == LOGGED)
-//			return registeredUsers.get(userName);
-//		else
-//			return 0;
-//	}
-	
 	public static boolean isValidUserName(String userName) {
 		return userName != null && userName.trim() != "";
 	}
-
+	
+	/**
+	 * Creates a new class to authenticate a specific user for a specific session.
+	 * @param userName the user name that will be checked
+	 * @param sessionId the session ID for which the authenticated user
+	 * @param sessions Maps session ID to user ID
+	 */
+	public AccountServer(String userName, String sessionId, 
+			ConcurrentHashMap<String, Integer> sessions) {
+		super();
+		
+		this.userName = userName;
+		this.sessionId = sessionId;
+		this.sessions = sessions;
+	}
+	
 	@Override
 	public void run() {
 		// emulation of a long process
@@ -89,9 +62,9 @@ public class AccountServer implements Runnable {
 		}
 		
 		if (userDb.containsKey(userName)) {
-			users.put(userName, userDb.get(userName));
+			sessions.put(sessionId, userDb.get(userName));
 		} else {
-			users.remove(userName);
+			sessions.remove(sessionId);
 		}
 	}
 }
