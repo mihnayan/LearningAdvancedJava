@@ -1,5 +1,10 @@
-package mihnayan.divetojava.msg;
+package mihnayan.divetojava.msgsystem;
 
+/**
+ * Class representing the message
+ * @author Mikhail Mangushev
+ *
+ */
 public abstract class Msg {
 	final private Address from;
 	final private Address to;
@@ -17,5 +22,9 @@ public abstract class Msg {
 		return to;
 	}
 	
+	/**
+	 * Starts execution of instructions that are stored in the abonent
+	 * @param abonent
+	 */
 	public abstract void exec(Abonent abonent);
 }

@@ -1,7 +1,12 @@
-package mihnayan.divetojava.msg;
+package mihnayan.divetojava.msgsystem;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Represents abonent address
+ * @author Mikhail Mangushev
+ *
+ */
 public class Address {
 	static private AtomicInteger abonentCreator = new AtomicInteger();
 	final private int abonentId;

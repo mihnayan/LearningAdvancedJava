@@ -1,4 +1,4 @@
-package mihnayan.divetojava.msg;
+package mihnayan.divetojava.msgsystem;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,6 +6,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MessageSystem {
+	
+	private AddressService addressService = new AddressService();
 	
 	private Map<Address, ConcurrentLinkedQueue<Msg>> messages =
 			new HashMap<Address, ConcurrentLinkedQueue<Msg>>();
@@ -23,6 +25,10 @@ public class MessageSystem {
 //			message.exec(abonent);
 			messageQueue.poll().exec(abonent);
 		}
+	}
+	
+	public AddressService getAddressService() {
+		return addressService;
 	}
 
 }

@@ -11,16 +11,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import mihnayan.divetojava.msgsystem.Abonent;
+import mihnayan.divetojava.msgsystem.Address;
+import mihnayan.divetojava.msgsystem.MessageSystem;
+
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-public class Frontend extends AbstractHandler implements Runnable {
+public class Frontend extends AbstractHandler implements Runnable, Abonent {
 	
 	private static Logger log = Logger.getLogger(Frontend.class.getName());
 	
 	private static ConcurrentHashMap<String, Integer> authenticatedSessions = 
 			new ConcurrentHashMap<String, Integer>();
 	
+	private MessageSystem ms;
+	private Address address;
 	private AtomicInteger handleCount;
 	private String error;
 	
@@ -30,8 +36,11 @@ public class Frontend extends AbstractHandler implements Runnable {
 	// field for user name in html form
 	private final String FRM_USER_NAME = "user-name";
 	
-	public Frontend() {
+	public Frontend(MessageSystem ms) {
 		super();
+		this.ms = ms;
+		address = new Address();
+		
 		handleCount = new AtomicInteger();
 		
 		error = "";
@@ -68,6 +77,11 @@ public class Frontend extends AbstractHandler implements Runnable {
 			}
 			log.info("This page was handled " + handleCount + " times...");
 		}
+	}
+	
+	@Override
+	public Address getAddress() {
+		return address;
 	}
 	
 	private String buildPage(HttpServletRequest request) {

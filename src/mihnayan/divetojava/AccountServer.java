@@ -3,6 +3,10 @@ package mihnayan.divetojava;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import mihnayan.divetojava.msgsystem.Abonent;
+import mihnayan.divetojava.msgsystem.Address;
+import mihnayan.divetojava.msgsystem.MessageSystem;
+
 /**
  * Class which authenticates a specific user for a specific session. Authentication is starts 
  * after invoking start() method of class.  After success end of process puts user ID in the 
@@ -11,9 +15,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Mikhail Mangushev
  *
  */
-public class AccountServer implements Runnable {
+public class AccountServer implements Runnable, Abonent {
 	
 	public final static int WAITING = 0;
+	
+	private MessageSystem ms;
+	private Address address;
 	
 	private String userName;
 	private String sessionId;
@@ -26,6 +33,11 @@ public class AccountServer implements Runnable {
 		userDb.put("Yoda", 2);
 		userDb.put("Mace Windu", 3);
 		userDb.put("Obi-Wan Kenobi", 4);
+	}
+	
+	public AccountServer(MessageSystem ms) {
+		this.ms = ms;
+		address = new Address();
 	}
 	
 	/**
@@ -52,6 +64,14 @@ public class AccountServer implements Runnable {
 		this.sessions = sessions;
 	}
 	
+	public int getUserId(String userName) {
+		if (userDb.containsKey(userName)) {
+			return userDb.get(userName);
+		} else {
+			return 0;
+		}
+	}
+	
 	@Override
 	public void run() {
 		// emulation of a long process
@@ -66,5 +86,10 @@ public class AccountServer implements Runnable {
 		} else {
 			sessions.remove(sessionId);
 		}
+	}
+
+	@Override
+	public Address getAddress() {
+		return address;
 	}
 }
