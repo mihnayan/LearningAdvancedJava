@@ -64,6 +64,15 @@ public class AccountServer implements Runnable, Abonent {
 		this.sessions = sessions;
 	}
 	
+	@Override
+	public Address getAddress() {
+		return address;
+	}
+	
+	public MessageSystem getMessageSystem() {
+		return ms;
+	}
+
 	public int getUserId(String userName) {
 		if (userDb.containsKey(userName)) {
 			return userDb.get(userName);
@@ -86,10 +95,5 @@ public class AccountServer implements Runnable, Abonent {
 		} else {
 			sessions.remove(sessionId);
 		}
-	}
-
-	@Override
-	public Address getAddress() {
-		return address;
 	}
 }
