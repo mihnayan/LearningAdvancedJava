@@ -1,7 +1,6 @@
 package mihnayan.divetojava;
 
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 import mihnayan.divetojava.msgsystem.Abonent;
 import mihnayan.divetojava.msgsystem.Address;
@@ -17,14 +16,8 @@ import mihnayan.divetojava.msgsystem.MessageSystem;
  */
 public class AccountServer implements Runnable, Abonent {
 	
-	public final static int WAITING = 0;
-	
 	private MessageSystem ms;
 	private Address address;
-	
-	private String userName;
-	private String sessionId;
-	private ConcurrentHashMap<String, Integer> sessions;
 	
 	private static HashMap<String, Integer> userDb = new HashMap<String, Integer>();
 	static {
@@ -38,6 +31,7 @@ public class AccountServer implements Runnable, Abonent {
 	public AccountServer(MessageSystem ms) {
 		this.ms = ms;
 		address = new Address();
+		ms.getAddressService().setAddress(this);
 	}
 	
 	/**
@@ -47,21 +41,6 @@ public class AccountServer implements Runnable, Abonent {
 	 */
 	public static boolean isValidUserName(String userName) {
 		return userName != null && userName.trim() != "";
-	}
-	
-	/**
-	 * Creates a new class to authenticate a specific user for a specific session.
-	 * @param userName the user name that will be checked
-	 * @param sessionId the session ID for which the authenticated user
-	 * @param sessions Maps session ID to user ID
-	 */
-	public AccountServer(String userName, String sessionId, 
-			ConcurrentHashMap<String, Integer> sessions) {
-		super();
-		
-		this.userName = userName;
-		this.sessionId = sessionId;
-		this.sessions = sessions;
 	}
 	
 	@Override
@@ -83,17 +62,14 @@ public class AccountServer implements Runnable, Abonent {
 	
 	@Override
 	public void run() {
-		// emulation of a long process
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		if (userDb.containsKey(userName)) {
-			sessions.put(sessionId, userDb.get(userName));
-		} else {
-			sessions.remove(sessionId);
+		while (true) {
+			try {
+				// emulation of a long process			
+				Thread.sleep(5000);
+				ms.execForAbonent(this);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

@@ -6,8 +6,8 @@ package mihnayan.divetojava.msgsystem;
  *
  */
 public abstract class Msg {
-	final private Address from;
-	final private Address to;
+	final protected Address from;
+	final protected Address to;
 	
 	public Msg(Address from, Address to) {
 		this.from = from;

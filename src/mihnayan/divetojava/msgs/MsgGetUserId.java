@@ -2,11 +2,12 @@ package mihnayan.divetojava.msgs;
 
 import mihnayan.divetojava.AccountServer;
 import mihnayan.divetojava.msgsystem.Address;
+import mihnayan.divetojava.msgsystem.Msg;
 
 public class MsgGetUserId extends MsgToAccountServer {
 
-	private String userName;
-	private String sessionId;
+	final private String userName;
+	final private String sessionId;
 
 	public MsgGetUserId(Address from, Address to, String userName, String sessionId) {
 		super(from, to);
@@ -14,9 +15,11 @@ public class MsgGetUserId extends MsgToAccountServer {
 		this.sessionId = sessionId;
 	}
 
+	@Override
 	public void exec(AccountServer accountServer) {
-		int id = accountServer.getUserId(userName);
-		accountServer.getMessageSystem().sendMessage(null);
+		int userId = accountServer.getUserId(userName);
+		Msg message = new MsgSetUserId(to, from, sessionId, userId);
+		accountServer.getMessageSystem().sendMessage(message);
 	}
 	
 	

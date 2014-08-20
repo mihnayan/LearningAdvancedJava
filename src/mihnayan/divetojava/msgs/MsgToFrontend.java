@@ -21,5 +21,7 @@ public abstract class MsgToFrontend extends Msg {
 					"Wrong abonent class: " + abonent.getClass().getName() + "!");
 		}
 	}
+	
+	public abstract void exec(Frontend frontend);
 
 }

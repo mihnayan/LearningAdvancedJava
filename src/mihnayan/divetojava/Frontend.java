@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import mihnayan.divetojava.msgs.MsgGetUserId;
 import mihnayan.divetojava.msgsystem.Abonent;
 import mihnayan.divetojava.msgsystem.Address;
 import mihnayan.divetojava.msgsystem.MessageSystem;
@@ -22,8 +23,8 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 	
 	private static Logger log = Logger.getLogger(Frontend.class.getName());
 	
-	private static ConcurrentHashMap<String, Integer> authenticatedSessions = 
-			new ConcurrentHashMap<String, Integer>();
+	private static ConcurrentHashMap<String, HttpSession> authenticatedSessions = 
+			new ConcurrentHashMap<String, HttpSession>();
 	
 	private MessageSystem ms;
 	private Address address;
@@ -71,6 +72,7 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 	public void run() {
 		while (true) {
 			try {
+				ms.execForAbonent(this);
 				Thread.sleep(5000);
 			} catch(InterruptedException e) {
 				return;
@@ -82,6 +84,13 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 	@Override
 	public Address getAddress() {
 		return address;
+	}
+	
+	public void setUserId(String sessionId, int userId) {
+		if (userId != 0)
+			authenticatedSessions.get(sessionId).setAttribute("userId", userId);
+		else
+			authenticatedSessions.remove(sessionId);
 	}
 	
 	private String buildPage(HttpServletRequest request) {
@@ -96,8 +105,9 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 			userName = request.getParameter(FRM_USER_NAME);
 			if (AccountServer.isValidUserName(userName)) {
 				session.setAttribute("userName", userName);
-				authenticatedSessions.put(sessionId, AccountServer.WAITING);
-				login(userName, sessionId, authenticatedSessions);
+				session.setAttribute("userId", 0);
+				authenticatedSessions.put(sessionId, session);
+				login(userName, sessionId);
 			} else {
 				error = "Your name is not valid: " + userName;
 				return welcomePage(sessionId);				
@@ -108,7 +118,7 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 		if (!authenticatedSessions.containsKey(sessionId))
 			return "You can not be authenticated! " + userName;
 		
-		if (authenticatedSessions.get(sessionId) == AccountServer.WAITING)
+		if ((Integer) (authenticatedSessions.get(sessionId).getAttribute("userId")) == 0)
 			return idlePage("Wait for authorization, please...");
 		
 		return "You were successfully authenticated :-) And your name is <strong>" + userName
@@ -154,12 +164,10 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 		return "<div class=\"status\">" + err + "</div>";
 	}
 	
-	private void login(String userName, String sessionId, 
-			ConcurrentHashMap<String, Integer> sessions) {
-		
-		AccountServer accountServer = new AccountServer(userName, sessionId, sessions);
-		Thread accountServerThread = new Thread(accountServer);
-		accountServerThread.start();
+	private void login(String userName, String sessionId) {
+		log.info(userName);
+		Address to = ms.getAddressService().getAddress(AccountServer.class);
+		ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
 	}
 
 }

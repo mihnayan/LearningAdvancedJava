@@ -6,7 +6,7 @@ import mihnayan.divetojava.msgsystem.Address;
 import mihnayan.divetojava.msgsystem.Msg;
 import mihnayan.divetojava.msgsystem.WrongAbonentClassException;
 
-public class MsgToAccountServer extends Msg {
+public abstract class MsgToAccountServer extends Msg {
 
 	public MsgToAccountServer(Address from, Address to) {
 		super(from, to);
@@ -21,5 +21,7 @@ public class MsgToAccountServer extends Msg {
 					"Wrong abonent class: " + abonent.getClass().getName() + "!");
 		}
 	}
+	
+	public abstract void exec(AccountServer accountServer);
 
 }
