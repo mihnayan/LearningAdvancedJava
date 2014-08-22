@@ -103,6 +103,10 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 		String userName = (String) session.getAttribute("userName");
 		if (userName == null) {
 			userName = request.getParameter(FRM_USER_NAME);
+			
+			if (userName == null)
+				return welcomePage(sessionId);
+			
 			if (AccountServer.isValidUserName(userName)) {
 				session.setAttribute("userName", userName);
 				session.setAttribute("userId", 0);
@@ -114,15 +118,18 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 			}
 		}
 		
-		//TODO: allow the user to re-enter the registration data
-		if (!authenticatedSessions.containsKey(sessionId))
-			return "You can not be authenticated! " + userName;
+		if (!authenticatedSessions.containsKey(sessionId)) {
+			session.removeAttribute("userName");
+			return notAuthenticatedPage(userName);
+		}
 		
-		if ((Integer) (authenticatedSessions.get(sessionId).getAttribute("userId")) == 0)
+		Integer userId = (Integer) authenticatedSessions.get(sessionId).getAttribute("userId");
+		
+		if (userId == 0)
 			return idlePage("Wait for authorization, please...");
 		
 		return "You were successfully authenticated :-) And your name is <strong>" + userName
-				+ "</strong>. And you userId is " + authenticatedSessions.get(sessionId);
+				+ "</strong>. And you userId is " + userId;
 	}
 	
 	private String welcomePage(String sessionId) {
@@ -134,7 +141,7 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 				+ "<h2>Welcom to Advanced Java course!</h2>"
 				+ "<p>Your sessionId: " + sessionId + "</p>"
 				+ "<form method=\"post\">"
-				+ "<label for=\"user-name-id\">Enter your name, please:</label>"
+				+ "<label for=\"user-name-id\">Enter your name, please: </label>"
 				+ "<input type=\"text\" id=\"user-name-id\" name=\"user-name\">"
 				+ "<input type=\"submit\">"
 				+ "</form>"
@@ -156,6 +163,16 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 				+ "</body></html>";
 	}
 	
+	private String notAuthenticatedPage(String userName) {
+		return _htmlHeader
+				+ "<title>Advanced Java: not authenticated</title></head>"
+				+ "<body>\n"
+				+ "<p>Sorry, you can not be authenticated with name <strong>" + userName 
+				+ "</strong></p>"
+				+ "<p>You can <a href=\"http://localhost:8080\">try to sign in again</a></p>"
+				+ "</body></html>";
+	}
+	
 	private String getError(boolean clear) {
 		if (error == "") return "";
 		String err = error;
@@ -165,7 +182,6 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 	}
 	
 	private void login(String userName, String sessionId) {
-		log.info(userName);
 		Address to = ms.getAddressService().getAddress(AccountServer.class);
 		ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
 	}
