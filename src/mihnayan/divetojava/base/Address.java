@@ -1,4 +1,4 @@
-package mihnayan.divetojava.msgsystem;
+package mihnayan.divetojava.base;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

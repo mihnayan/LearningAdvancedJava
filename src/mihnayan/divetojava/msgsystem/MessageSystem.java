@@ -5,17 +5,24 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class MessageSystem {
+import mihnayan.divetojava.base.Abonent;
+import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.Msg;
+
+public class MessageSystem implements MessageService {
 	
-	private AddressService addressService = new AddressService();
+	private AddressSrv addressService = new AddressSrv();
 	
 	private Map<Address, ConcurrentLinkedQueue<Msg>> messages =
 			new HashMap<Address, ConcurrentLinkedQueue<Msg>>();
 	
+	@Override
 	public void sendMessage(Msg message) {
 		getQueue(message.getTo()).add(message);
 	}
 	
+	@Override
 	public void execForAbonent(Abonent abonent) {
 		Queue<Msg> messageQueue = getQueue(abonent.getAddress());
 		while(!messageQueue.isEmpty()) {
@@ -23,7 +30,8 @@ public class MessageSystem {
 		}
 	}
 	
-	public AddressService getAddressService() {
+	@Override
+	public AddressSrv getAddressService() {
 		return addressService;
 	}
 	

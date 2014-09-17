@@ -1,4 +1,4 @@
-package mihnayan.divetojava;
+package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,22 +11,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import mihnayan.divetojava.msgs.MsgGetUserId;
-import mihnayan.divetojava.msgsystem.Abonent;
-import mihnayan.divetojava.msgsystem.Address;
-import mihnayan.divetojava.msgsystem.MessageSystem;
+import mihnayan.divetojava.accountsrv.AccountServer;
+import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.Frontend;
+import mihnayan.divetojava.base.MessageService;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-public class Frontend extends AbstractHandler implements Runnable, Abonent {
+public class GameFrontend extends AbstractHandler implements Runnable, Frontend {
 	
-	private static Logger log = Logger.getLogger(Frontend.class.getName());
+	private static Logger log = Logger.getLogger(GameFrontend.class.getName());
 	
 	private static ConcurrentHashMap<String, HttpSession> authenticatedSessions = 
 			new ConcurrentHashMap<String, HttpSession>();
 	
-	private MessageSystem ms;
+	private MessageService ms;
 	private Address address;
 	private AtomicInteger handleCount;
 	private String error;
@@ -37,7 +37,7 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 	// field for user name in html form
 	private final String FRM_USER_NAME = "user-name";
 	
-	public Frontend(MessageSystem ms) {
+	public GameFrontend(MessageService ms) {
 		super();
 		this.ms = ms;
 		address = new Address();
@@ -86,6 +86,12 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 		return address;
 	}
 	
+	@Override
+	public MessageService getMessageService() {
+		return ms;
+	}
+	
+	@Override
 	public void setUserId(String sessionId, int userId) {
 		if (userId != 0)
 			authenticatedSessions.get(sessionId).setAttribute("userId", userId);
@@ -185,5 +191,4 @@ public class Frontend extends AbstractHandler implements Runnable, Abonent {
 		Address to = ms.getAddressService().getAddress(AccountServer.class);
 		ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
 	}
-
 }

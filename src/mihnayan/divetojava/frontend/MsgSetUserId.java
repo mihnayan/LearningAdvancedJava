@@ -1,7 +1,8 @@
-package mihnayan.divetojava.msgs;
+package mihnayan.divetojava.frontend;
 
-import mihnayan.divetojava.Frontend;
-import mihnayan.divetojava.msgsystem.Address;
+import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.Frontend;
+import mihnayan.divetojava.msgsystem.MsgToFrontend;
 
 public class MsgSetUserId extends MsgToFrontend {
 	

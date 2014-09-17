@@ -1,5 +1,8 @@
 package mihnayan.divetojava;
 
+import mihnayan.divetojava.accountsrv.AccountServer;
+import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.frontend.GameFrontend;
 import mihnayan.divetojava.msgsystem.MessageSystem;
 
 import org.eclipse.jetty.server.Server;
@@ -11,11 +14,11 @@ public class DTJServer {
 
 	public static void main(String[] args) throws Exception {
 		
-		MessageSystem ms = new MessageSystem();
+		MessageService ms = new MessageSystem();
 		
 		Server server = new Server(8080);
 		
-		Frontend frontend = new Frontend(ms);
+		GameFrontend frontend = new GameFrontend(ms);
 		AccountServer accountServer = new AccountServer(ms);
 		
 		(new Thread(frontend)).start();

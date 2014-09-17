@@ -1,10 +1,9 @@
-package mihnayan.divetojava.msgs;
+package mihnayan.divetojava.msgsystem;
 
-import mihnayan.divetojava.Frontend;
-import mihnayan.divetojava.msgsystem.Abonent;
-import mihnayan.divetojava.msgsystem.Address;
-import mihnayan.divetojava.msgsystem.Msg;
-import mihnayan.divetojava.msgsystem.WrongAbonentClassException;
+import mihnayan.divetojava.base.Abonent;
+import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.Frontend;
+import mihnayan.divetojava.base.Msg;
 
 public abstract class MsgToFrontend extends Msg {
 

@@ -3,28 +3,25 @@ package mihnayan.divetojava.msgsystem;
 import java.util.HashMap;
 import java.util.Map;
 
+import mihnayan.divetojava.base.Abonent;
+import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.AddressService;
+
 /**
  * Service that allows to save and to get the address of abonent
  * @author Mikail Mangushev
  *
  */
-public class AddressService {
+public class AddressSrv implements AddressService {
 
 	private Map<Class<?>, Address> addresses = new HashMap<Class<?>, Address>();
 	
-	/**
-	 * Allows to get abonent address by abonent class name
-	 * @param Abonent class name
-	 * @return Address of abonent
-	 */
-	public Address getAddress(Class<?> abonentClass) {
+		@Override
+	public Address getAddress(Class<? extends Abonent> abonentClass) {
 		return addresses.get(abonentClass);
 	}
 	
-	/**
-	 * Sets the correspondence between abonent class name and address of abonent
-	 * @param abonent
-	 */
+	@Override
 	public void setAddress(Abonent abonent) {
 		addresses.put(abonent.getClass(), abonent.getAddress());
 	}

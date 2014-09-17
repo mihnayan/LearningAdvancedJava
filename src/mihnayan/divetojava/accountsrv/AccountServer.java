@@ -1,10 +1,10 @@
-package mihnayan.divetojava;
+package mihnayan.divetojava.accountsrv;
 
 import java.util.HashMap;
 
-import mihnayan.divetojava.msgsystem.Abonent;
-import mihnayan.divetojava.msgsystem.Address;
-import mihnayan.divetojava.msgsystem.MessageSystem;
+import mihnayan.divetojava.base.AccountService;
+import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.MessageService;
 
 /**
  * Class which authenticates a specific user for a specific session. Authentication is starts 
@@ -14,9 +14,9 @@ import mihnayan.divetojava.msgsystem.MessageSystem;
  * @author Mikhail Mangushev
  *
  */
-public class AccountServer implements Runnable, Abonent {
+public class AccountServer implements Runnable, AccountService {
 	
-	private MessageSystem ms;
+	private MessageService ms;
 	private Address address;
 	
 	private static HashMap<String, Integer> userDb = new HashMap<String, Integer>();
@@ -28,7 +28,7 @@ public class AccountServer implements Runnable, Abonent {
 		userDb.put("Obi-Wan Kenobi", 4);
 	}
 	
-	public AccountServer(MessageSystem ms) {
+	public AccountServer(MessageService ms) {
 		this.ms = ms;
 		address = new Address();
 		ms.getAddressService().setAddress(this);
@@ -48,7 +48,8 @@ public class AccountServer implements Runnable, Abonent {
 		return address;
 	}
 	
-	public MessageSystem getMessageSystem() {
+	@Override
+	public MessageService getMessageService() {
 		return ms;
 	}
 

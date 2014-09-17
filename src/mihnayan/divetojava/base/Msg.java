@@ -1,4 +1,5 @@
-package mihnayan.divetojava.msgsystem;
+package mihnayan.divetojava.base;
+
 
 /**
  * Class representing the message
@@ -14,11 +15,11 @@ public abstract class Msg {
 		this.to = to;
 	}
 	
-	protected Address getFrom() {
+	public Address getFrom() {
 		return from;
 	}
 	
-	protected Address getTo() {
+	public Address getTo() {
 		return to;
 	}
 	
