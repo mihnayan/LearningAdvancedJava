@@ -37,6 +37,8 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	// field for user name in html form
 	private final String FRM_USER_NAME = "user-name";
 	
+	private final String[] targets = {"login", "welcome"};
+	
 	public GameFrontend(MessageService ms) {
 		super();
 		this.ms = ms;
@@ -55,12 +57,22 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		baseRequest.setHandled(true);
 		
 		handleCount.incrementAndGet();
+				
+//		if (!"/servlet".equals(target))
+//			response.sendRedirect("/");
+		
+		
 		
 		try {
-			response.setContentType("text/html;charset=utf-8");
+			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			
-			response.getWriter().println(buildPage(request));
+			String page = buildPage(request);
+			
+			if ("hello".equals(page))
+				response.sendRedirect("index.html");
+			
+			response.getWriter().println(page);
 			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, e.getMessage());
@@ -120,7 +132,8 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 				login(userName, sessionId);
 			} else {
 				error = "Your name is not valid: " + userName;
-				return welcomePage(sessionId);				
+//				return welcomePage(sessionId);
+				return "hello";
 			}
 		}
 		
@@ -190,5 +203,9 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	private void login(String userName, String sessionId) {
 		Address to = ms.getAddressService().getAddress(AccountServer.class);
 		ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
+	}
+	
+	private String getLoginData() {
+		return "{}";
 	}
 }

@@ -30,6 +30,7 @@ public class DTJServer {
 		contentHandler.setResourceBase("content");
 		
 		HandlerList handlers = new HandlerList();
+		handlers.addHandler(contentHandler);
 		handlers.addHandler(new SessionHandler());
 		handlers.addHandler(frontend);
 		

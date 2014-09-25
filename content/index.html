@@ -1,11 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Hello page</title>
+    <meta charset="UTF-8">
+    <title>Advanced Java: Welcome</title>
+    
+    <link rel="stylesheet" href="css/foundation.min.css">
+    <link rel="stylesheet" href="css/game_common.css">
 </head>
 <body>
-	<h2>Hello from Dive To Java course from intuit.ru!</h2>
-	<p>For start PageGeneratorServlet <a href="http://localhost:8080/servlet">click here</a></p>
+    <h2>Welcome to Advanced Java course!</h2>
+    <p>Your sessionId: <span id="session-id"></span></p>
+    <div id="login-form">
+        <form method="post">
+            <label for="user-name-id">Enter your name, please: </label>
+            <input type="text" id="user-name-id" name="user-name">
+            <input type="submit">
+        </form>
+    </div>
+
+    <script type="text/javascripts" src="js/vendor/jquery.js"></script>
+    <script type="text/javascript" src="js/foundation.min.js"></script>
+    <script type="text/javascript">
+        $(document).foundation();
+    </script>
 </body>
+
 </html>
