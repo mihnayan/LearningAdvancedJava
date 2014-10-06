@@ -31,9 +31,6 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	private AtomicInteger handleCount;
 	private String error;
 	
-	private final String _htmlHeader = "<!DOCTYPE html><html>"
-				+ "<head><meta charset=\"UTF-8\">";
-	
 	// field for user name in html form
 	private final String FRM_USER_NAME = "user-name";
 	
@@ -49,6 +46,31 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		error = "";
 	}
 
+	/**
+	 * Rules of building user data 
+	 * User data are json format:
+	 * {
+	 *     userLoginData: {
+	 *         sessionId: 0,
+	 *         userName: "",
+	 *         userId: ""
+	 *     },
+	 *     
+	 *     requestStatus: {
+	 *         type: ["error", "success", "warning"],
+	 *         text: "some text"
+	 *     }
+	 * }
+	 * 
+	 * 1. If the request is a new session, then fill 'sessionId' key only in response. 
+	 * 	  Keys 'userName' and 'userId'are empty.
+	 * 2. If the user has sent a request for authentication by sending the user name, the response 
+	 *    filled only keys 'sessionId' and 'userName' while waiting for the response from the 
+	 *    authentication server. Key 'userId' is still empty.
+	 * 3. If the user is logged, all the keys of 'userLoginData' object are filled with the proper values.
+	 * 4. If user authentication was not successful, then the 'userId' key has the value '0'.
+	 *     
+	 */
 	@Override
 	public void handle(String target, Request baseRequest,
 			HttpServletRequest request, HttpServletResponse response)
@@ -61,18 +83,13 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 //		if (!"/servlet".equals(target))
 //			response.sendRedirect("/");
 		
-		
-		
 		try {
 			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			
-			String page = buildPage(request);
+			String data = buildData(request);
 			
-			if ("hello".equals(page))
-				response.sendRedirect("index.html");
-			
-			response.getWriter().println(page);
+			response.getWriter().println(data);
 			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, e.getMessage());
@@ -111,19 +128,19 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			authenticatedSessions.remove(sessionId);
 	}
 	
-	private String buildPage(HttpServletRequest request) {
+	private String buildData(HttpServletRequest request) {
 		
 		HttpSession session = request.getSession();
 		String sessionId = session.getId();
 		
-		if (session.isNew()) return welcomePage(sessionId);
+		if (session.isNew()) return welcomeData(sessionId);
 		
 		String userName = (String) session.getAttribute("userName");
 		if (userName == null) {
 			userName = request.getParameter(FRM_USER_NAME);
 			
 			if (userName == null)
-				return welcomePage(sessionId);
+				return welcomeData(sessionId);
 			
 			if (AccountServer.isValidUserName(userName)) {
 				session.setAttribute("userName", userName);
@@ -132,64 +149,82 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 				login(userName, sessionId);
 			} else {
 				error = "Your name is not valid: " + userName;
-//				return welcomePage(sessionId);
-				return "hello";
+				return welcomeData(sessionId);
 			}
 		}
 		
 		if (!authenticatedSessions.containsKey(sessionId)) {
 			session.removeAttribute("userName");
-			return notAuthenticatedPage(userName);
+			return notAuthenticatedPage(userName, sessionId);
 		}
 		
 		Integer userId = (Integer) authenticatedSessions.get(sessionId).getAttribute("userId");
 		
 		if (userId == 0)
-			return idlePage("Wait for authorization, please...");
+			return idlePage(userName, sessionId);
 		
-		return "You were successfully authenticated :-) And your name is <strong>" + userName
-				+ "</strong>. And you userId is " + userId;
+		String data = "{"
+				+ "\"userLoginData\": {"
+				+ "\"sessionId\": \"" + sessionId + "\","
+				+ "\"userName\": \"" + userName + "\","
+				+ "\"userId\": \"" + userId + "\""
+				+ "},"
+				+ "\"requestStatus\": {"
+				+ "\"type\": \"success\","
+				+ "\"text\": \"" + getError(true) + "\""
+				+ "}"
+				+ "}";
+		
+		return data;
 	}
 	
-	private String welcomePage(String sessionId) {
+	private String welcomeData(String sessionId) {
 		
-		String page = _htmlHeader
-				+ "<title>Advanced Java: Welcome</title></head>"
-				+ "<body>"
-				+ getError(true)
-				+ "<h2>Welcom to Advanced Java course!</h2>"
-				+ "<p>Your sessionId: " + sessionId + "</p>"
-				+ "<form method=\"post\">"
-				+ "<label for=\"user-name-id\">Enter your name, please: </label>"
-				+ "<input type=\"text\" id=\"user-name-id\" name=\"user-name\">"
-				+ "<input type=\"submit\">"
-				+ "</form>"
-				+ "</body></html>";
+		String data = "{"
+				+ "\"userLoginData\": {"
+				+ "\"sessionId\": \"" + sessionId + "\","
+				+ "\"userName\": \"\","
+				+ "\"userId\": \"\""
+				+ "},"
+				+ "\"requestStatus\": {"
+				+ "\"type\": \"success\","
+				+ "\"text\": \"" + getError(true) + "\""
+				+ "}"
+				+ "}";
 		
-		return page;
+		return data;
 	}
 	
-	private String idlePage(String message) {
-		return _htmlHeader
-				+ "<title>Advanced Java: idle...</title></head>"
-				+ "<body>\n"
-				+ "<p>" + message + "</p>"
-				+ "<script>"
-				+ "window.onload = function () {"
-				+ "    setInterval('location.replace(location.href)', 1000);"
-				+ "};"
-				+ "</script>"
-				+ "</body></html>";
+	private String idlePage(String userName, String sessionId) {
+		String data = "{"
+				+ "\"userLoginData\": {"
+				+ "\"sessionId\": \"" + sessionId + "\","
+				+ "\"userName\": \"" + userName + "\","
+				+ "\"userId\": \"\""
+				+ "},"
+				+ "\"requestStatus\": {"
+				+ "\"type\": \"success\","
+				+ "\"text\": \"" + getError(true) + "\""
+				+ "}"
+				+ "}";
+		
+		return data;
 	}
 	
-	private String notAuthenticatedPage(String userName) {
-		return _htmlHeader
-				+ "<title>Advanced Java: not authenticated</title></head>"
-				+ "<body>\n"
-				+ "<p>Sorry, you can not be authenticated with name <strong>" + userName 
-				+ "</strong></p>"
-				+ "<p>You can <a href=\"http://localhost:8080\">try to sign in again</a></p>"
-				+ "</body></html>";
+	private String notAuthenticatedPage(String userName, String sessionId) {
+		String data = "{"
+				+ "\"userLoginData\": {"
+				+ "\"sessionId\": \"" + sessionId + "\","
+				+ "\"userName\": \"" + userName + "\","
+				+ "\"userId\": \"0\""
+				+ "},"
+				+ "\"requestStatus\": {"
+				+ "\"type\": \"success\","
+				+ "\"text\": \"" + getError(true) + "\""
+				+ "}"
+				+ "}";
+		
+		return data;
 	}
 	
 	private String getError(boolean clear) {
