@@ -35,7 +35,6 @@ var showLoginForm = function (yes) {
 };
 
 var showWelcome = function (userData) {
-	
 	if (typeof userData !== 'object') return;
 	
 	var userId = userData.userLoginData.userId;
@@ -81,17 +80,11 @@ var showWelcome = function (userData) {
 	
 	var currentStatus = '';
 	
-	if (userId === '') {
-		if (userName === '') 
-			currentStatus = 'newSession';
-		else
-			currentStatus = 'waiting';
-	} else if (userId === '0') {
-		currentStatus = 'notLogged';
-	} else {
-		currentStatus = 'logged';
-	}
-	
+	if (userName === '')
+		currentStatus = 'newSession';
+	else currentStatus = (userId === '') ? 'notLogged' : 
+			(userId === '0') ? 'waiting' : 'logged';
+		
 	if (currentStatus === 'waiting') 
 		setTimeout(function () { loginRequest("", showWelcome) }, 1000);
 	
