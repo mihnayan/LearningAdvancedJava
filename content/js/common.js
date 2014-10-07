@@ -1,15 +1,12 @@
-/**
- * 
- */
-
 'use strict';
 
 /**
- * retrieves data about a user by user name
- * @param user name
- * @return data in json format
+ * requests user authorization
+ * @param serializevalue user data
+ * @param success callback function
+ * @param error callback function
  */
-var getUserLoginData = function (userData, callback, err_callback) {
+var loginRequest = function (userData, callback, err_callback) {
 	
 	$.ajax({
 		url: "login",
@@ -95,16 +92,15 @@ var showWelcome = function (userData) {
 		currentStatus = 'logged';
 	}
 	
-	console.info(currentStatus);
-	if (currentStatus === 'waiting') {
-		setTimeout(function () { getUserLoginData("", showWelcome) }, 1000);
-	}
+	if (currentStatus === 'waiting') 
+		setTimeout(function () { loginRequest("", showWelcome) }, 1000);
+	
 	showStatus[currentStatus]();
 }; //showWelcome
 
 var login = function () {
 	showLoginForm(false);
-	getUserLoginData($('#login-form').serializeArray(), showWelcome);
+	loginRequest($('#login-form').serializeArray(), showWelcome);
 	$('#login-form').trigger('reset');
 };
 
@@ -118,5 +114,5 @@ $(document).ready(function () {
 		}
 	});
 	
-	getUserLoginData("", showWelcome);
+	loginRequest("", showWelcome);
 });
