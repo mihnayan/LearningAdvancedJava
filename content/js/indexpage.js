@@ -31,7 +31,8 @@ var loginRequest = function (userData, callback, err_callback) {
 
 var showLoginForm = function (yes) {
 	typeof yes === 'undefined' || yes ? 
-			$('#login-form').removeClass("hide") : $('#login-form').addClass("hide");
+			$('#login-form').removeClass("hide").trigger('reset') : 
+				$('#login-form').addClass("hide");
 };
 
 var showWelcome = function (userData) {
@@ -91,13 +92,12 @@ var showWelcome = function (userData) {
 	showStatus[currentStatus]();
 }; //showWelcome
 
-var login = function () {
-	showLoginForm(false);
-	loginRequest($('#login-form').serializeArray(), showWelcome);
-	$('#login-form').trigger('reset');
-};
-
 $(document).ready(function () { 
+	var login = function () {
+		loginRequest($('#login-form').serializeArray(), showWelcome);
+		showLoginForm(false);
+	};
+	
 	$('#submit-button').on('click', login);
 	$('#login-form').on("keypress", function(e) {
 		var code = e.keyCode || e.which; 
