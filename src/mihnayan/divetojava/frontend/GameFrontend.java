@@ -35,41 +35,6 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	
 	private final String[] targets = {"login", "welcome"};
 	
-	private class LoginDataBuilder {
-		private String userSessionId;
-		
-		public String userName = "";
-		public String userId = "";
-		public String requestStatus = "";
-		public String requestStatusText = "";
-		
-		public LoginDataBuilder(String sessionId) {
-			userSessionId = sessionId;
-		}
-		
-		@Override
-		public String toString() {
-			return "{\"userLoginData\": {"
-					+ "\"sessionId\": \"" + userSessionId + "\","
-					+ "\"userName\": \"" + userName + "\","
-					+ "\"userId\": \"" + userId + "\""
-					+ "},"
-					+ "\"requestStatus\": {"
-					+ "\"type\": \"" + requestStatus + "\","
-					+ "\"text\": \"" + requestStatusText + "\""
-					+ "}"
-					+ "}";
-		}
-	}
-	
-	public GameFrontend(MessageService ms) {
-		super();
-		this.ms = ms;
-		address = new Address();
-		
-		handleCount = new AtomicInteger();
-	}
-
 	/**
 	 * Rules of building user data 
 	 * User data are json format:
@@ -95,6 +60,71 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	 * 4. If user authentication was not successful, then the 'userId' key has the empty string value.
 	 *     
 	 */
+	private class LoginDataBuilder {
+		private String sessionId;
+		private String userName = "";
+		private String userId = "";
+		private String requestStatus = "";
+		private String requestStatusText = "";
+		
+		public void handleRequest(HttpServletRequest request) {
+			HttpSession session = request.getSession();
+			sessionId = session.getId();
+			
+			if (session.isNew()) return;
+			
+			userName = (String) session.getAttribute("userName");
+			if (userName == null) {
+				userName = request.getParameter(FRM_USER_NAME);
+				
+				if (userName == null) return;
+				
+				if (AccountServer.isValidUserName(userName)) {
+					session.setAttribute("userName", userName);
+					session.setAttribute("userId", 0);
+					authenticatedSessions.put(sessionId, session);
+					
+					Address to = ms.getAddressService().getAddress(AccountServer.class);
+					ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
+				} else {
+					requestStatus = "error";
+					requestStatusText = "Your name is not valid: " + userName;
+					return;
+				}
+			}
+			
+			if (!authenticatedSessions.containsKey(sessionId)) {
+				session.removeAttribute("userName");
+				return;
+			}
+			
+			userId = ((Integer) 
+					authenticatedSessions.get(sessionId).getAttribute("userId")).toString();
+		}
+		
+		@Override
+		public String toString() {
+			return "{\"userLoginData\": {"
+					+ "\"sessionId\": \"" + sessionId + "\","
+					+ "\"userName\": \"" + (userName == null ? "" : userName) + "\","
+					+ "\"userId\": \"" + userId + "\""
+					+ "},"
+					+ "\"requestStatus\": {"
+					+ "\"type\": \"" + requestStatus + "\","
+					+ "\"text\": \"" + requestStatusText + "\""
+					+ "}"
+					+ "}";
+		}
+	}
+	
+	public GameFrontend(MessageService ms) {
+		super();
+		this.ms = ms;
+		address = new Address();
+		
+		handleCount = new AtomicInteger();
+	}
+
 	@Override
 	public void handle(String target, Request baseRequest,
 			HttpServletRequest request, HttpServletResponse response)
@@ -111,9 +141,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			
-			String data = buildData(request);
+			LoginDataBuilder loginData = new LoginDataBuilder();
+			loginData.handleRequest(request);
 			
-			response.getWriter().println(data);
+			response.getWriter().println(loginData.toString());
 			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, e.getMessage());
@@ -150,50 +181,5 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			authenticatedSessions.get(sessionId).setAttribute("userId", userId);
 		else
 			authenticatedSessions.remove(sessionId);
-	}
-	
-	private String buildData(HttpServletRequest request) {
-		
-		HttpSession session = request.getSession();
-		String sessionId = session.getId();
-		
-		LoginDataBuilder loginData = new LoginDataBuilder(sessionId);
-		
-		if (session.isNew()) return loginData.toString();
-		
-		String userName = (String) session.getAttribute("userName");
-		if (userName == null) {
-			userName = request.getParameter(FRM_USER_NAME);
-			
-			if (userName == null) return loginData.toString();
-			
-			if (AccountServer.isValidUserName(userName)) {
-				session.setAttribute("userName", userName);
-				session.setAttribute("userId", 0);
-				authenticatedSessions.put(sessionId, session);
-				sendLoginRequest(userName, sessionId);
-			} else {
-				loginData.requestStatus = "error";
-				loginData.requestStatusText = "Your name is not valid: " + userName;
-				return loginData.toString();
-			}
-		}
-		
-		loginData.userName = userName;
-		
-		if (!authenticatedSessions.containsKey(sessionId)) {
-			session.removeAttribute("userName");
-			return loginData.toString();
-		}
-		
-		Integer userId = (Integer) authenticatedSessions.get(sessionId).getAttribute("userId");
-		loginData.userId = userId.toString();
-		
-		return loginData.toString();
-	}
-	
-	private void sendLoginRequest(String userName, String sessionId) {
-		Address to = ms.getAddressService().getAddress(AccountServer.class);
-		ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
 	}
 }
