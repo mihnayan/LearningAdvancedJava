@@ -2,25 +2,16 @@
 
 /**
  * requests user authorization
- * @param serializevalue user data
  * @param success callback function
- * @param error callback function
  */
-var loginRequest = function (userData, callback, err_callback) {
-	
+var loginRequest = function (callback) {
 	$.ajax({
 		url: "login",
-		
-		data: userData,
-		
 		type: "GET",
-		
 		dataType: "json",
-		
 		success: function (json) {
 			callback(json);
 		},
-		
 		error: function (xhr, status, errorThrown) {
 			 console.log("Error: " + errorThrown);
 			 console.log("Status: " + status);
@@ -37,10 +28,10 @@ var showLoginForm = function (yes) {
 
 var showWelcome = function (userData) {
 	if (typeof userData !== 'object') return;
-	
-	var userId = userData.userLoginData.userId;
-	var userName = userData.userLoginData.userName;
-	var sessionId = userData.userLoginData.sessionId;
+	console.log(userData);
+	var userId = userData.userId;
+	var userName = userData.userName;
+	var sessionId = userData.sessionId;
 	
 	$('span#session-id-text').text(sessionId);
 	
@@ -62,39 +53,32 @@ var showWelcome = function (userData) {
 		$('#alert').removeClass().addClass('alert-box ' + type).html(message);
 	}
 	
-	var showStatus = {
-		'newSession': function () {
+	var handleLoginStatus = {
+		'NEW': function () {
 			showLoginForm();
 		},
-		'waiting': function () {
+		'WAITING': function () {
 			showAlert('info', 'Wait for authorization, please...');
+			setTimeout(function () { loginRequest(showWelcome) }, 1000);
 		},
-		'logged': function () {
+		'LOGGED': function () {
 			showAlert('success', 'You were successfully authenticated :-)', true);
 			showUserLoginInfo();
 		},
-		'notLogged': function () {
-			showAlert('warning', 'Sorry, you can not be authenticated! '
+		'NOT_LOGGED': function () {
+			showAlert('warning', 'Sorry, you can not be authenticated with username <strong> \"'
+					+ userName + '\"</strong>! '
 					+ 'You can <a href=\"http://localhost:8080\">try to sign in again</a>');
 		}
 	};
 	
-	var currentStatus = '';
-	
-	if (userName === '')
-		currentStatus = 'newSession';
-	else currentStatus = (userId === '') ? 'notLogged' : 
-			(userId === '0') ? 'waiting' : 'logged';
-		
-	if (currentStatus === 'waiting') 
-		setTimeout(function () { loginRequest("", showWelcome) }, 1000);
-	
-	showStatus[currentStatus]();
+	console.log(userData.loginStatus);
+	handleLoginStatus[userData.loginStatus]();
 }; //showWelcome
 
 $(document).ready(function () { 
 	var login = function () {
-		loginRequest($('#login-form').serializeArray(), showWelcome);
+		$.post('login', $('#login-form').serializeArray(), showWelcome); 
 		showLoginForm(false);
 	};
 	
@@ -107,5 +91,5 @@ $(document).ready(function () {
 		}
 	});
 	
-	loginRequest("", showWelcome);
+	loginRequest(showWelcome);
 });

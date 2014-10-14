@@ -39,81 +39,57 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	 * Rules of building user data 
 	 * User data are json format:
 	 * {
-	 *     userLoginData: {
-	 *         sessionId: 0,
-	 *         userName: "",
-	 *         userId: ""
-	 *     },
-	 *     
-	 *     requestStatus: {
-	 *         type: ["error", "success", "warning"],
-	 *         text: "some text"
-	 *     }
-	 * }
-	 * 
-	 * 1. If the request is a new session, then fill 'sessionId' key only in response. 
-	 * 	  Keys 'userName' and 'userId'are empty.
-	 * 2. If the user has sent a request for authentication by sending the user name, the response 
-	 *    filled only keys 'sessionId' and 'userName' while waiting for the response from the 
-	 *    authentication server. The 'userId' key value becomes equal to '0' at this time.
-	 * 3. If the user is logged, all the keys of 'userLoginData' object are filled with the proper values.
-	 * 4. If user authentication was not successful, then the 'userId' key has the empty string value.
-	 *     
+	 *     sessionId: 0,
+	 *     userName: "",
+	 *     userId: "",
+	 *     loginStatus: AuthState,
+	 *     text: "some text"
+	 * }   
 	 */
 	private class LoginDataBuilder {
 		private String sessionId;
-		private String userName = "";
-		private String userId = "";
-		private String requestStatus = "";
-		private String requestStatusText = "";
+		private String userName;
+		private Integer userId;
+		private AuthState loginStatus;
+		private String statusText = "";
+		private HttpSession session;
 		
-		public void handleRequest(HttpServletRequest request) {
-			HttpSession session = request.getSession();
+		public LoginDataBuilder(HttpServletRequest request) {
+			session = request.getSession();
 			sessionId = session.getId();
-			
-			if (session.isNew()) return;
-			
 			userName = (String) session.getAttribute("userName");
-			if (userName == null) {
+			if (userName == null)
 				userName = request.getParameter(FRM_USER_NAME);
-				
-				if (userName == null) return;
-				
-				if (AccountServer.isValidUserName(userName)) {
-					session.setAttribute("userName", userName);
-					session.setAttribute("userId", 0);
-					authenticatedSessions.put(sessionId, session);
-					
-					Address to = ms.getAddressService().getAddress(AccountServer.class);
-					ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
-				} else {
-					requestStatus = "error";
-					requestStatusText = "Your name is not valid: " + userName;
-					return;
-				}
-			}
-			
-			if (!authenticatedSessions.containsKey(sessionId)) {
-				session.removeAttribute("userName");
-				return;
-			}
-			
-			userId = ((Integer) 
-					authenticatedSessions.get(sessionId).getAttribute("userId")).toString();
+			userId = (Integer) session.getAttribute("userId");
+			loginStatus = getAuthState();
 		}
 		
-		@Override
-		public String toString() {
-			return "{\"userLoginData\": {"
+		public void handleRequest() {
+			
+			if (loginStatus == AuthState.NEW && userName != null) {
+				registerSession(session, userName);
+				loginStatus = AuthState.WAITING;
+			}
+				
+			if (loginStatus == AuthState.NOT_LOGGED)
+				unregisterSession(session);
+		}
+		
+		public String toJSON() {
+			return "{"
 					+ "\"sessionId\": \"" + sessionId + "\","
 					+ "\"userName\": \"" + (userName == null ? "" : userName) + "\","
-					+ "\"userId\": \"" + userId + "\""
-					+ "},"
-					+ "\"requestStatus\": {"
-					+ "\"type\": \"" + requestStatus + "\","
-					+ "\"text\": \"" + requestStatusText + "\""
-					+ "}"
+					+ "\"userId\": \"" + (userId == null ? "" : userId) + "\","
+					+ "\"loginStatus\": \"" + loginStatus + "\","
+					+ "\"text\": \"" + statusText + "\""
 					+ "}";
+		}
+		
+		private AuthState getAuthState() {
+			if (!authenticatedSessions.containsKey(sessionId)) return AuthState.NEW;
+			if (userId == null) return AuthState.WAITING;
+			if (userId == 0) return AuthState.NOT_LOGGED;
+			return AuthState.LOGGED;
 		}
 	}
 	
@@ -141,10 +117,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			response.setContentType("application/json;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			
-			LoginDataBuilder loginData = new LoginDataBuilder();
-			loginData.handleRequest(request);
+			LoginDataBuilder loginData = new LoginDataBuilder(request);
+			loginData.handleRequest();
 			
-			response.getWriter().println(loginData.toString());
+			response.getWriter().println(loginData.toJSON());
 			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, e.getMessage());
@@ -177,9 +153,24 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	
 	@Override
 	public void setUserId(String sessionId, int userId) {
-		if (userId != 0)
-			authenticatedSessions.get(sessionId).setAttribute("userId", userId);
-		else
-			authenticatedSessions.remove(sessionId);
+		authenticatedSessions.get(sessionId).setAttribute("userId", userId);
+	}
+	
+	private void registerSession(HttpSession session, String userName) {
+		
+		String sessionId = session.getId();
+		
+		session.setAttribute("userName", userName);
+		session.setAttribute("userId", null);
+		authenticatedSessions.put(sessionId, session);
+		
+		Address to = ms.getAddressService().getAddress(AccountServer.class);
+		ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
+	}
+	
+	private void unregisterSession(HttpSession session) {
+		session.removeAttribute("userName");
+		session.removeAttribute("userId");
+		authenticatedSessions.remove(session.getId());
 	}
 }
