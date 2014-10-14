@@ -30,11 +30,6 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	private Address address;
 	private AtomicInteger handleCount;
 	
-	// field for user name in html form
-	private final String FRM_USER_NAME = "user-name";
-	
-	private final String[] targets = {"login", "welcome"};
-	
 	/**
 	 * Rules of building user data 
 	 * User data are json format:
@@ -46,7 +41,7 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	 *     text: "some text"
 	 * }   
 	 */
-	private class LoginDataBuilder {
+	private class LoginHandler {
 		private String sessionId;
 		private String userName;
 		private Integer userId;
@@ -54,7 +49,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		private String statusText = "";
 		private HttpSession session;
 		
-		public LoginDataBuilder(HttpServletRequest request) {
+		// field for user name in html form
+		private final String FRM_USER_NAME = "user-name";
+		
+		public LoginHandler(HttpServletRequest request) {
 			session = request.getSession();
 			sessionId = session.getId();
 			userName = (String) session.getAttribute("userName");
@@ -64,7 +62,7 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			loginStatus = getAuthState();
 		}
 		
-		public void handleRequest() {
+		public void handleRequest(HttpServletResponse response) {
 			
 			if (loginStatus == AuthState.NEW && userName != null) {
 				registerSession(session, userName);
@@ -73,6 +71,15 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 				
 			if (loginStatus == AuthState.NOT_LOGGED)
 				unregisterSession(session);
+			
+			response.setContentType("application/json;charset=utf-8");
+			response.setStatus(HttpServletResponse.SC_OK);
+			try {
+				response.getWriter().println(toJSON());
+			} catch (IOException e) {
+				log.log(Level.SEVERE, e.getMessage());
+				e.printStackTrace();
+			}
 		}
 		
 		public String toJSON() {
@@ -109,22 +116,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		baseRequest.setHandled(true);
 		
 		handleCount.incrementAndGet();
-				
-//		if (!"/servlet".equals(target))
-//			response.sendRedirect("/");
 		
-		try {
-			response.setContentType("application/json;charset=utf-8");
-			response.setStatus(HttpServletResponse.SC_OK);
-			
-			LoginDataBuilder loginData = new LoginDataBuilder(request);
-			loginData.handleRequest();
-			
-			response.getWriter().println(loginData.toJSON());
-			
-		} catch (Exception e) {
-			log.log(Level.SEVERE, e.getMessage());
-			e.printStackTrace();
+		if ("/login".equals(target)) {			
+			LoginHandler loginHandler = new LoginHandler(request);
+			loginHandler.handleRequest(response);
 		}
 	}
 
