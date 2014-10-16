@@ -16,7 +16,7 @@ public class AddressSrv implements AddressService {
 
 	private Map<Class<?>, Address> addresses = new HashMap<Class<?>, Address>();
 	
-		@Override
+	@Override
 	public Address getAddress(Class<? extends Abonent> abonentClass) {
 		return addresses.get(abonentClass);
 	}
