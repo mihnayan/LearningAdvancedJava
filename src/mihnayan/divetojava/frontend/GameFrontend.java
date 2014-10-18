@@ -54,19 +54,20 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		
 		public LoginHandler(HttpServletRequest request) {
 			session = request.getSession();
+			
 			sessionId = session.getId();
 			userName = (String) session.getAttribute("userName");
 			if (userName == null)
 				userName = request.getParameter(FRM_USER_NAME);
 			userId = (Integer) session.getAttribute("userId");
-			loginStatus = getAuthState();
+			loginStatus = getAuthState(session);
 		}
 		
 		public void handleRequest(HttpServletResponse response) {
 			
 			if (loginStatus == AuthState.NEW && userName != null) {
 				registerSession(session, userName);
-				loginStatus = AuthState.WAITING;
+				loginStatus = getAuthState(session);
 			}
 				
 			if (loginStatus == AuthState.NOT_LOGGED)
@@ -90,13 +91,6 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 					+ "\"loginStatus\": \"" + loginStatus + "\","
 					+ "\"text\": \"" + statusText + "\""
 					+ "}";
-		}
-		
-		private AuthState getAuthState() {
-			if (!authenticatedSessions.containsKey(sessionId)) return AuthState.NEW;
-			if (userId == null) return AuthState.WAITING;
-			if (userId == 0) return AuthState.NOT_LOGGED;
-			return AuthState.LOGGED;
 		}
 	}
 	
@@ -148,7 +142,13 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	
 	@Override
 	public void setUserId(String sessionId, int userId) {
-		authenticatedSessions.get(sessionId).setAttribute("userId", userId);
+		HttpSession session = authenticatedSessions.get(sessionId);
+		if (userId != 0) {
+			session.setAttribute("userId", userId);
+			setAuthState(session, AuthState.LOGGED);
+		}
+		else
+			setAuthState(session, AuthState.NOT_LOGGED);
 	}
 	
 	private void registerSession(HttpSession session, String userName) {
@@ -157,6 +157,7 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		
 		session.setAttribute("userName", userName);
 		session.setAttribute("userId", null);
+		setAuthState(session, AuthState.WAITING);
 		authenticatedSessions.put(sessionId, session);
 		
 		Address to = ms.getAddressService().getAddress(AccountServer.class);
@@ -164,8 +165,17 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	}
 	
 	private void unregisterSession(HttpSession session) {
+		setAuthState(session, AuthState.NEW);
 		session.removeAttribute("userName");
-		session.removeAttribute("userId");
 		authenticatedSessions.remove(session.getId());
+	}
+	
+	private void setAuthState(HttpSession session, AuthState authState) {
+		session.setAttribute("authState", authState);
+	}
+	
+	private AuthState getAuthState(HttpSession session) {
+		if (session.isNew()) setAuthState(session, AuthState.NEW);
+		return (AuthState) session.getAttribute("authState");
 	}
 }
