@@ -39,6 +39,7 @@ var showWelcome = function (userData) {
 		$('span#user-name-text').text(userName);
 		$('span#user-id-text').text(userId);
 		$('#user-login-info p').removeClass('hide');
+		$('#game-link').removeClass('hide');
 	};
 	
 	/**
