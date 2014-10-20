@@ -85,11 +85,64 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		
 		public String toJSON() {
 			return "{"
-					+ "\"sessionId\": \"" + sessionId + "\","
-					+ "\"userName\": \"" + (userName == null ? "" : userName) + "\","
-					+ "\"userId\": \"" + (userId == null ? "" : userId) + "\","
-					+ "\"loginStatus\": \"" + loginStatus + "\","
+					+ "\"sessionId\": \"" + sessionId + "\", "
+					+ "\"userName\": \"" + (userName == null ? "" : userName) + "\", "
+					+ "\"userId\": " + (userId == null ? 0 : userId) + ", "
+					+ "\"loginStatus\": \"" + loginStatus + "\", "
 					+ "\"text\": \"" + statusText + "\""
+					+ "}";
+		}
+	}
+	
+	/**
+	 * Rules of building user data 
+	 * User data are json format:
+	 * {
+	 *     "userData": {
+	 *         "userName": "user name",
+	 *         "userId": 0
+	 *     },
+	 *     "opponentData": {
+	 *         "userName": "user name"
+	 *     }
+	 * }
+	 */
+	private class GameHandler {
+		private String userName;
+		private Integer userId;
+		private String opponentUserName;
+		
+		public GameHandler(HttpServletRequest request) {
+			String sessionId = request.getSession().getId();
+			HttpSession session = authenticatedSessions.get(sessionId);
+			if (session == null) return;
+			
+			userName = (String) session.getAttribute("userName");
+			userId = (Integer) session.getAttribute("userId");
+		}
+		
+		public void handleRequest(HttpServletResponse response) {
+			
+			
+			response.setContentType("application/json;charset=utf-8");
+			response.setStatus(HttpServletResponse.SC_OK);
+			try {
+				response.getWriter().println(toJSON());
+			} catch (IOException e) {
+				log.log(Level.SEVERE, e.getMessage());
+				e.printStackTrace();
+			}
+		}
+		
+		public String toJSON() {
+			return "{"
+					+ "\"userData\": {"
+						+ "\"userName\": \"" + userName + "\", "
+						+ "\"userId\": " + (userId == null ? 0 : userId)  
+						+ "}, "
+					+ "\"opponentData\": {"
+						+ "\"userName\": \"" + opponentUserName + "\""
+						+ "}" 
 					+ "}";
 		}
 	}
@@ -114,6 +167,11 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		if ("/login".equals(target)) {			
 			LoginHandler loginHandler = new LoginHandler(request);
 			loginHandler.handleRequest(response);
+		}
+		
+		if ("/gameData".equals(target)) {
+			GameHandler gameHandler = new GameHandler(request);
+			gameHandler.handleRequest(response);
 		}
 	}
 
