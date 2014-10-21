@@ -98,11 +98,11 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	 * Rules of building user data 
 	 * User data are json format:
 	 * {
-	 *     "userData": {
+	 *     "player": {
 	 *         "userName": "user name",
 	 *         "userId": 0
 	 *     },
-	 *     "opponentData": {
+	 *     "opponent": {
 	 *         "userName": "user name"
 	 *     }
 	 * }
@@ -136,11 +136,11 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		
 		public String toJSON() {
 			return "{"
-					+ "\"userData\": {"
-						+ "\"userName\": \"" + userName + "\", "
+					+ "\"player\": {"
+						+ "\"userName\": " + (userName == null ? null : "\"" + userName + "\"") + ", "
 						+ "\"userId\": " + (userId == null ? 0 : userId)  
 						+ "}, "
-					+ "\"opponentData\": {"
+					+ "\"opponent\": {"
 						+ "\"userName\": \"" + opponentUserName + "\""
 						+ "}" 
 					+ "}";
