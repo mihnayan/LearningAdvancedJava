@@ -1,6 +1,7 @@
 package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -14,7 +15,9 @@ import javax.servlet.http.HttpSession;
 import mihnayan.divetojava.accountsrv.AccountServer;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
+import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.gamemechanics.MainGameMechanics;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -104,21 +107,41 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	 *     },
 	 *     "opponent": {
 	 *         "userName": "user name"
-	 *     }
+	 *     },
+	 *     "gameState": GameState
 	 * }
 	 */
 	private class GameHandler {
+		
+		private static final byte requredPlayers = 2;
+		
+		String sessionId;
 		private String userName;
 		private Integer userId;
+		
+		String opponentSessionId;
 		private String opponentUserName;
+		private GameState gameState;
 		
 		public GameHandler(HttpServletRequest request) {
-			String sessionId = request.getSession().getId();
+			sessionId = request.getSession().getId();
 			HttpSession session = authenticatedSessions.get(sessionId);
-			if (session == null) return;
+			if (session == null || !isAuthenticated(session)) return;
 			
 			userName = (String) session.getAttribute("userName");
 			userId = (Integer) session.getAttribute("userId");
+			
+			gameState = (GameState) session.getAttribute("gameState");
+			if (gameState == GameState.GAMEPLAY) return;
+			
+			opponentSessionId = getOpponentSessionId();
+			if (opponentSessionId == null) return;
+			
+			HttpSession opponentSession = authenticatedSessions.get(opponentSessionId);
+			opponentUserName = (String) opponentSession.getAttribute("userName");
+			Integer opponentUserId = (Integer) opponentSession.getAttribute("userId");
+			
+			startGame(userId, opponentUserId);
 		}
 		
 		public void handleRequest(HttpServletResponse response) {
@@ -142,8 +165,25 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 						+ "}, "
 					+ "\"opponent\": {"
 						+ "\"userName\": \"" + opponentUserName + "\""
-						+ "}" 
+						+ "},"
+					+ "\"gameState\": \"" + gameState + "\"" 
 					+ "}";
+		}
+		
+		/**
+		 * Returns the ID of the first session in which the userId does not match the userId 
+		 * of the user who sent the request.
+		 * @return
+		 */
+		private String getOpponentSessionId() {
+			Set<String> keys = authenticatedSessions.keySet();
+			keys.remove(sessionId);
+			for (String key : keys) {
+				if (userId != (Integer) authenticatedSessions.get(key).getAttribute("userId"))
+						return key;
+			}
+			
+			return null;
 		}
 	}
 	
@@ -235,5 +275,15 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	private AuthState getAuthState(HttpSession session) {
 		if (session.isNew()) setAuthState(session, AuthState.NEW);
 		return (AuthState) session.getAttribute("authState");
+	}
+	
+	private boolean isAuthenticated(HttpSession session) {
+		AuthState state = (AuthState) session.getAttribute("authState");
+		return state != null && state == AuthState.LOGGED;
+	}
+	
+	private void startGame(int playerId, int opponentId) {
+		Address to = ms.getAddressService().getAddress(MainGameMechanics.class);
+		ms.sendMessage(new MsgStartGameSession(address, to, playerId, opponentId));
 	}
 }

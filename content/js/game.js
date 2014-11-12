@@ -20,22 +20,23 @@
     });
  };
 
- var loadUsers = function (data) {
+ var playersInfo = function (data) {
     console.log(data);
-    var playerName = data.player.userName;
+    var player = data.player;
+    var opponent = data.opponent;
 
-    var showPlayerInfo = function () {
-        console.log("ok");
+    var showPlayer = function () {
+        $('#player-name').text(player.userName);
+        $('#player-id').text(player.userId);
     };
 
     playerName && playerName.trim() !== '' ?
-        showPlayerInfo() : 
+        showPlayer() : 
         showAlert('warning', 'Sorry, you are not authenticated! '
             + 'You can go to <a href=\"http://localhost:8080\">the authentication page</a>');
 
  };
 
  $(document).ready(function () { 
-    console.log('ok');
-    requestUsersData(loadUsers);
+    requestUsersData(playersInfo);
 });
