@@ -5,16 +5,19 @@ import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.msgsystem.MsgToGM;
 
 public class MsgStartGameSession extends MsgToGM {
+	
+	private int user1;
+	private int user2;
 
-	public MsgStartGameSession(Address from, Address to, int playerId, int opponentId) {
+	public MsgStartGameSession(Address from, Address to, int user1, int user2) {
 		super(from, to);
-		// TODO Auto-generated constructor stub
+		this.user1 = user1;
+		this.user2 = user2;
 	}
 
 	@Override
 	public void exec(GameMechanics gm) {
-		// TODO Auto-generated method stub
-
+		gm.startGameSession(user1, user2);
 	}
 
 }

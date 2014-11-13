@@ -2,19 +2,21 @@ package mihnayan.divetojava.gamemechanics;
 
 import java.util.Date;
 
-import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.Frontend;
+import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.base.MessageService;
 
-public class MainGameMechanics implements Abonent, Runnable {
+public class MainGameMechanics implements GameMechanics, Runnable {
 
 	private MessageService ms;
 	private Address address;
 	private GameSession gs;
-	private Abonent gameDataSubscriber;
+	private Frontend frontend;
 	
-	public MainGameMechanics(MessageService ms) {
+	public MainGameMechanics(MessageService ms, Frontend frontend) {
 		this.ms = ms;
+		this.frontend = frontend;
 		address = new Address();
 		ms.getAddressService().setAddress(this);
 	}
@@ -24,6 +26,7 @@ public class MainGameMechanics implements Abonent, Runnable {
 		while (true) {
 			try {		
 				ms.execForAbonent(this);
+				sendGameData();
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -41,24 +44,19 @@ public class MainGameMechanics implements Abonent, Runnable {
 		return address;
 	}
 	
-	/**
-	 * Starts game session (start game). 
-	 * If the game session is already created, then nothing happens
-	 * @param user1 user id of first opponent
-	 * @param user2 user id of second opponent
-	 * @param gameDataSubscriber the subscriber to which to send game data
-	 */
-	public void startGameSession(int user1, int user2, Abonent gameDataSubscriber) {
+	@Override
+	public void startGameSession(int user1, int user2) {
 		if (gs == null) {
 			gs = new GameSession(user1, user2);
-			this.gameDataSubscriber = gameDataSubscriber;
 		}
 	}
 	
 	private void sendGameData() {
 		if (gs == null) return;
-		GameData gd = new GameData();
+		GameDataImpl gd = new GameDataImpl();
 		gd.setElapsedTime((new Date()).getTime() - gs.getStartTime());
+		MsgSetGameData msg = new MsgSetGameData(address, frontend.getAddress(), gd);
+		ms.sendMessage(msg);
 	}
 
 }

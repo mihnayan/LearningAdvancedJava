@@ -1,14 +1,12 @@
 package mihnayan.divetojava.gamemechanics;
 
-/**
- * Contains Game data that will be displayed on frontend
- * @author Mikhail Mangushev
- *
- */
-public class GameData {
+import mihnayan.divetojava.base.GameData;
+
+public class GameDataImpl implements GameData {
 	
 	private long elapsedTime;
 
+	@Override
 	public long getElapsedTime() {
 		return elapsedTime;
 	}

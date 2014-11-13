@@ -15,6 +15,7 @@ import javax.servlet.http.HttpSession;
 import mihnayan.divetojava.accountsrv.AccountServer;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
+import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;
@@ -32,6 +33,8 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	private MessageService ms;
 	private Address address;
 	private AtomicInteger handleCount;
+	
+	private GameData gameData;
 	
 	/**
 	 * Rules of building user data 
@@ -249,6 +252,11 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			setAuthState(session, AuthState.NOT_LOGGED);
 	}
 	
+	@Override
+	public void setGameData(GameData gameData) {
+		this.gameData = gameData;
+	}
+
 	private void registerSession(HttpSession session, String userName) {
 		
 		String sessionId = session.getId();
