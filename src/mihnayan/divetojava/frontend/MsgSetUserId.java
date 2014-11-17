@@ -8,16 +8,18 @@ public class MsgSetUserId extends MsgToFrontend {
 	
 	final private String sessionId;
 	final private int userId;
+	final private String userName;
 
-	public MsgSetUserId(Address from, Address to, String sessionId, int userId) {
+	public MsgSetUserId(Address from, Address to, String sessionId, int userId, String userName) {
 		super(from, to);
 		this.sessionId = sessionId;
 		this.userId = userId;
+		this.userName = userName;
 	}
 
 	@Override
 	public void exec(Frontend frontend) {
-		frontend.setUserId(sessionId, userId);
+		frontend.setUser(sessionId, userId, userName);
 	}
 	
 	

@@ -1,6 +1,10 @@
 package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,13 +31,16 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	
 	private static Logger log = Logger.getLogger(GameFrontend.class.getName());
 	
-	private static ConcurrentHashMap<String, HttpSession> authenticatedSessions = 
+	private static ConcurrentHashMap<String, HttpSession> sessions = 
 			new ConcurrentHashMap<String, HttpSession>();
+	private Map<Integer, UserProfile> authenticatedUsers = new HashMap<Integer, UserProfile>();
 	
 	private MessageService ms;
 	private Address address;
 	private AtomicInteger handleCount;
 	
+	private static final byte REQUIRED_PLAYERS = 2;
+	private GameState gameState;
 	private GameData gameData;
 	
 	/**
@@ -111,12 +118,13 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	 *     "opponent": {
 	 *         "userName": "user name"
 	 *     },
-	 *     "gameState": GameState
+	 *     "gameState": GameState,
+	 *     "gameData": {
+	 *         "elapsedTime": "123456789"
+	 *     }
 	 * }
 	 */
 	private class GameHandler {
-		
-		private static final byte requredPlayers = 2;
 		
 		String sessionId;
 		private String userName;
@@ -124,11 +132,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		
 		String opponentSessionId;
 		private String opponentUserName;
-		private GameState gameState;
 		
 		public GameHandler(HttpServletRequest request) {
 			sessionId = request.getSession().getId();
-			HttpSession session = authenticatedSessions.get(sessionId);
+			HttpSession session = sessions.get(sessionId);
 			if (session == null || !isAuthenticated(session)) return;
 			
 			userName = (String) session.getAttribute("userName");
@@ -140,11 +147,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			opponentSessionId = getOpponentSessionId();
 			if (opponentSessionId == null) return;
 			
-			HttpSession opponentSession = authenticatedSessions.get(opponentSessionId);
+			HttpSession opponentSession = sessions.get(opponentSessionId);
 			opponentUserName = (String) opponentSession.getAttribute("userName");
 			Integer opponentUserId = (Integer) opponentSession.getAttribute("userId");
 			
-			startGame(userId, opponentUserId);
 		}
 		
 		public void handleRequest(HttpServletResponse response) {
@@ -179,10 +185,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		 * @return
 		 */
 		private String getOpponentSessionId() {
-			Set<String> keys = authenticatedSessions.keySet();
+			Set<String> keys = sessions.keySet();
 			keys.remove(sessionId);
 			for (String key : keys) {
-				if (userId != (Integer) authenticatedSessions.get(key).getAttribute("userId"))
+				if (userId != (Integer) sessions.get(key).getAttribute("userId"))
 						return key;
 			}
 			
@@ -194,6 +200,8 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		super();
 		this.ms = ms;
 		address = new Address();
+		
+		gameState = GameState.WAITING_FOR_QUORUM;
 		
 		handleCount = new AtomicInteger();
 	}
@@ -242,11 +250,14 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	}
 	
 	@Override
-	public void setUserId(String sessionId, int userId) {
-		HttpSession session = authenticatedSessions.get(sessionId);
+	public void setUser(String sessionId, int userId, String userName) {
+		HttpSession session = sessions.get(sessionId);
 		if (userId != 0) {
 			session.setAttribute("userId", userId);
 			setAuthState(session, AuthState.LOGGED);
+			UserProfile userProfile = new UserProfile();
+			userProfile.setUserName(userName);
+			authenticatedUsers.put(userId, userProfile);
 		}
 		else
 			setAuthState(session, AuthState.NOT_LOGGED);
@@ -264,7 +275,7 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		session.setAttribute("userName", userName);
 		session.setAttribute("userId", null);
 		setAuthState(session, AuthState.WAITING);
-		authenticatedSessions.put(sessionId, session);
+		sessions.put(sessionId, session);
 		
 		Address to = ms.getAddressService().getAddress(AccountServer.class);
 		ms.sendMessage(new MsgGetUserId(address, to, userName, sessionId));
@@ -273,7 +284,7 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	private void unregisterSession(HttpSession session) {
 		setAuthState(session, AuthState.NEW);
 		session.removeAttribute("userName");
-		authenticatedSessions.remove(session.getId());
+		sessions.remove(session.getId());
 	}
 	
 	private void setAuthState(HttpSession session, AuthState authState) {
@@ -290,8 +301,13 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		return state != null && state == AuthState.LOGGED;
 	}
 	
-	private void startGame(int playerId, int opponentId) {
+	private void startGame() {
+		if (authenticatedUsers.size() < REQUIRED_PLAYERS) return;
+		Iterator<Integer> iterator = authenticatedUsers.keySet().iterator();
+		int user1 = iterator.next();
+		int user2 = iterator.next();
 		Address to = ms.getAddressService().getAddress(MainGameMechanics.class);
-		ms.sendMessage(new MsgStartGameSession(address, to, playerId, opponentId));
+		ms.sendMessage(new MsgStartGameSession(address, to, user1, user2));
+		log.info("Start game message was sent");
 	}
 }

@@ -19,7 +19,7 @@ public class MsgGetUserId extends MsgToAccountService {
 	@Override
 	public void exec(AccountService accountService) {
 		int userId = accountService.getUserId(userName);
-		Msg message = new MsgSetUserId(to, from, sessionId, userId);
+		Msg message = new MsgSetUserId(to, from, sessionId, userId, userName);
 		accountService.getMessageService().sendMessage(message);
 	}
 	
