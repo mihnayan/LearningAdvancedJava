@@ -1,8 +1,10 @@
 package mihnayan.divetojava;
 
 import mihnayan.divetojava.accountsrv.AccountServer;
+import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.frontend.GameFrontend;
+import mihnayan.divetojava.gamemechanics.MainGameMechanics;
 import mihnayan.divetojava.msgsystem.MessageSystem;
 
 import org.eclipse.jetty.server.Server;
@@ -20,9 +22,11 @@ public class DTJServer {
 		
 		GameFrontend frontend = new GameFrontend(ms);
 		AccountServer accountServer = new AccountServer(ms);
+		MainGameMechanics gameMechanics = new MainGameMechanics(ms, frontend);
 		
 		(new Thread(frontend)).start();
 		(new Thread(accountServer)).start();
+		(new Thread(gameMechanics)).start();
 		
 		ResourceHandler contentHandler = new ResourceHandler();
 		contentHandler.setDirectoriesListed(false);

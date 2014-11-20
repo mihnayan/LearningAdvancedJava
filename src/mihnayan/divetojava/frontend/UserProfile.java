@@ -4,7 +4,7 @@ public class UserProfile {
 	
 	private String userName;
 
-	public String getUsername() {
+	public String getUserName() {
 		return userName;
 	}
 
