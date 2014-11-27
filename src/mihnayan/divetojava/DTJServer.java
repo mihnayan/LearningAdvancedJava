@@ -1,7 +1,6 @@
 package mihnayan.divetojava;
 
 import mihnayan.divetojava.accountsrv.AccountServer;
-import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.frontend.GameFrontend;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;

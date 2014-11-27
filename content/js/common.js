@@ -15,3 +15,10 @@ var showAlert = function (type, message, close) {
         message += '<a href="#" class="close">&times;</a>';
     $('#alert').removeClass().addClass('alert-box ' + type).html(message);
 };
+
+var hideAlert = function () {
+    var el = $('#alert');
+    if (!el.hasClass('hide')) {
+        el.removeClass().addClass('hide');
+    }
+}

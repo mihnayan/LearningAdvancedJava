@@ -227,11 +227,11 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 			try {
 				ms.execForAbonent(this);
 				if (gameState != GameState.GAMEPLAY) startGame();
-				Thread.sleep(5000);
+				Thread.sleep(100);
 			} catch(InterruptedException e) {
 				return;
 			}
-			log.info("This page was handled " + handleCount + " times...");
+//			log.info("This page was handled " + handleCount + " times...");
 		}
 	}
 	
