@@ -288,7 +288,9 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	}
 	
 	private AuthState getAuthState(HttpSession session) {
-		if (session.isNew()) setAuthState(session, AuthState.NEW);
+		if (session.getAttribute("authState") == null || session.isNew()) {
+			setAuthState(session, AuthState.NEW);
+		}
 		return (AuthState) session.getAttribute("authState");
 	}
 	
