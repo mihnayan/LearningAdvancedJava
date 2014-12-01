@@ -1,22 +1,37 @@
 package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.MessageService;
+
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class GameFrontend extends AbstractHandler implements Runnable, Frontend {
 	
 	private static Logger log = Logger.getLogger(GameFrontend.class.getName());
+	
+	private static Map<String, Class<? extends RequestHandler>> targets = 
+			new HashMap<String, Class<? extends RequestHandler>>();
+	
+	static {
+		targets.put("/login", LoginRequestHandler.class);
+		targets.put("/gameData", GameDataRequestHandler.class);
+	}
 	
 	private MessageService ms;
 	private Address address;
@@ -39,14 +54,25 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 		
 		handleCount.incrementAndGet();
 		
-		if ("/login".equals(target)) {			
-			LoginRequestHandler loginHandler = new LoginRequestHandler(request, this);
-			loginHandler.handleRequest(response);
-		}
-		
-		if ("/gameData".equals(target)) {
-			GameDataRequestHandler gameHandler = new GameDataRequestHandler(request, this);
-			gameHandler.handleRequest(response);
+		if (target == null || !targets.containsKey(target)) return;
+		Class<? extends RequestHandler> cl = targets.get(target);
+		try {
+			Constructor<? extends RequestHandler> con = 
+					cl.getConstructor(HttpServletRequest.class, Abonent.class);
+			RequestHandler requestHandler = con.newInstance(new Object[] {request, this});
+			requestHandler.handleRequest(response);
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
 		}
 	}
 
