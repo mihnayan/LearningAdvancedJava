@@ -6,6 +6,7 @@ import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.UserId;
 
 public class MainGameMechanics implements GameMechanics, Runnable {
 
@@ -45,7 +46,7 @@ public class MainGameMechanics implements GameMechanics, Runnable {
 	}
 	
 	@Override
-	public void startGameSession(int user1, int user2) {
+	public void startGameSession(UserId user1, UserId user2) {
 		if (gs == null) {
 			gs = new GameSession(user1, user2);
 		}

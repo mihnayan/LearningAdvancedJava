@@ -15,6 +15,7 @@ import mihnayan.divetojava.accountsrv.AccountServer;
 import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.UserId;
 
 public class LoginRequestHandler extends RequestHandler {
 	
@@ -22,12 +23,12 @@ public class LoginRequestHandler extends RequestHandler {
 	
 	private static ConcurrentHashMap<String, HttpSession> sessions = 
 			new ConcurrentHashMap<String, HttpSession>();
-	public static Map<Integer, UserProfile> authenticatedUsers = 
-			new HashMap<Integer, UserProfile>();
+	public static Map<UserId, UserProfile> authenticatedUsers = 
+			new HashMap<UserId, UserProfile>();
 	
 	private String sessionId;
 	private String userName;
-	private Integer userId;
+	private UserId userId;
 	private AuthState loginStatus;
 	private String statusText;
 	
@@ -44,7 +45,7 @@ public class LoginRequestHandler extends RequestHandler {
 		userName = (String) session.getAttribute("userName");
 		if (userName == null)
 			userName = request.getParameter(FRM_USER_NAME);
-		userId = (Integer) session.getAttribute("userId");
+		userId = (UserId) session.getAttribute("userId");
 		loginStatus = getAuthState(session);
 	}
 	
@@ -63,9 +64,9 @@ public class LoginRequestHandler extends RequestHandler {
 		return sessions.get(sessionId);
 	}
 	
-	public static void setUser(String sessionId, int userId, String userName) {
+	public static void setUser(String sessionId, UserId userId, String userName) {
 		HttpSession session = sessions.get(sessionId);
-		if (userId != 0) {
+		if (userId != null) {
 			session.setAttribute("userId", userId);
 			setAuthState(session, AuthState.LOGGED);
 			UserProfile userProfile = new UserProfile();

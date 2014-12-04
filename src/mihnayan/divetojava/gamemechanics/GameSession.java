@@ -5,14 +5,16 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import mihnayan.divetojava.base.UserId;
+
 public class GameSession {
 	
 	private long startTime;
-	private List<Integer> userIds;
+	private List<UserId> userIds;
 
-	public GameSession(int user1, int user2) {
+	public GameSession(UserId user1, UserId user2) {
 		startTime = (new Date()).getTime();
-		userIds = new ArrayList<Integer>(2);
+		userIds = new ArrayList<UserId>(2);
 		userIds.add(user1);
 		userIds.add(user2);
 	}
@@ -21,7 +23,7 @@ public class GameSession {
 		return startTime;
 	}
 	
-	public List<Integer> getUserIds() {
+	public List<UserId> getUserIds() {
 		return Collections.unmodifiableList(userIds);
 	}
 }

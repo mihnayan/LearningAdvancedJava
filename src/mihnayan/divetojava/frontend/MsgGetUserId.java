@@ -3,6 +3,7 @@ package mihnayan.divetojava.frontend;
 import mihnayan.divetojava.base.AccountService;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Msg;
+import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.msgsystem.MsgToAccountService;
 
 public class MsgGetUserId extends MsgToAccountService {
@@ -18,7 +19,7 @@ public class MsgGetUserId extends MsgToAccountService {
 
 	@Override
 	public void exec(AccountService accountService) {
-		int userId = accountService.getUserId(userName);
+		UserId userId = accountService.getUserId(userName);
 		Msg message = new MsgSetUserId(to, from, sessionId, userId, userName);
 		accountService.getMessageService().sendMessage(message);
 	}

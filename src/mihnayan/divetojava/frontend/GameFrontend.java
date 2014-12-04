@@ -17,6 +17,7 @@ import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.UserId;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -100,7 +101,7 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
 	}
 	
 	@Override
-	public void setUser(String sessionId, int userId, String userName) {
+	public void setUser(String sessionId, UserId userId, String userName) {
 		LoginRequestHandler.setUser(sessionId, userId, userName);
 	}
 	

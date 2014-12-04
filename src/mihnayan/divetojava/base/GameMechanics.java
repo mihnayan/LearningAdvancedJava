@@ -8,5 +8,5 @@ public interface GameMechanics extends Abonent {
 	 * @param user1 user id of first opponent
 	 * @param user2 user id of second opponent
 	 */
-	public void startGameSession(int user1, int user2);
+	public void startGameSession(UserId user1, UserId user2);
 }

@@ -14,6 +14,7 @@ import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;
 
 public class GameDataRequestHandler extends RequestHandler {
@@ -27,7 +28,7 @@ public class GameDataRequestHandler extends RequestHandler {
 	
 	private String sessionId;
 	private String userName;
-	private Integer userId = 0;
+	private UserId userId;
 	private AuthState loginStatus = AuthState.NOT_LOGGED;
 
 	public GameDataRequestHandler(HttpServletRequest request, Abonent abonent) {
@@ -37,7 +38,7 @@ public class GameDataRequestHandler extends RequestHandler {
 		if (session == null || LoginRequestHandler.getAuthState(session) != AuthState.LOGGED) return;
 		
 		loginStatus = AuthState.LOGGED;
-		userId = (Integer) session.getAttribute("userId");
+		userId = (UserId) session.getAttribute("userId");
 		userName = LoginRequestHandler.authenticatedUsers.get(userId).getUserName();
 		
 		if (gameState != GameState.GAMEPLAY) startGame();
@@ -94,13 +95,13 @@ public class GameDataRequestHandler extends RequestHandler {
 	 * whose ID does not match the ID of the user that sent the request
 	 * @return
 	 */
-	private String getOpponentUserName(int playerId) {
-		if (playerId == 0 || gameState != GameState.GAMEPLAY) return "";
+	private String getOpponentUserName(UserId playerId) {
+		if (playerId == null || gameState != GameState.GAMEPLAY) return "";
 		
-		Set<Integer> keys = LoginRequestHandler.authenticatedUsers.keySet();
-		Iterator<Integer> iterator = keys.iterator();
-		int opponentId = iterator.next();
-		if (opponentId == playerId) opponentId = iterator.next();
+		Set<UserId> keys = LoginRequestHandler.authenticatedUsers.keySet();
+		Iterator<UserId> iterator = keys.iterator();
+		UserId opponentId = iterator.next();
+		if (opponentId.equals(playerId)) opponentId = iterator.next();
 
 		return LoginRequestHandler.authenticatedUsers.get(opponentId).getUserName();
 	}
@@ -116,9 +117,9 @@ public class GameDataRequestHandler extends RequestHandler {
 	
 	private void startGame() {
 		if (LoginRequestHandler.authenticatedUsers.size() < REQUIRED_PLAYERS) return;
-		Iterator<Integer> iterator = LoginRequestHandler.authenticatedUsers.keySet().iterator();
-		int user1 = iterator.next();
-		int user2 = iterator.next();
+		Iterator<UserId> iterator = LoginRequestHandler.authenticatedUsers.keySet().iterator();
+		UserId user1 = iterator.next();
+		UserId user2 = iterator.next();
 		
 		MessageService ms = abonent.getMessageService();
 		Address to = ms.getAddressService().getAddress(MainGameMechanics.class);

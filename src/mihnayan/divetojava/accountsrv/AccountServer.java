@@ -5,6 +5,7 @@ import java.util.HashMap;
 import mihnayan.divetojava.base.AccountService;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.UserId;
 
 /**
  * Class which authenticates a specific user for a specific session. Authentication is starts 
@@ -19,13 +20,13 @@ public class AccountServer implements Runnable, AccountService {
 	private MessageService ms;
 	private Address address;
 	
-	private static HashMap<String, Integer> userDb = new HashMap<String, Integer>();
+	private static HashMap<String, UserId> userDb = new HashMap<String, UserId>();
 	static {
-		userDb = new HashMap<String, Integer>();
-		userDb.put("Anakin Skywalker", 1);
-		userDb.put("Yoda", 2);
-		userDb.put("Mace Windu", 3);
-		userDb.put("Obi-Wan Kenobi", 4);
+		userDb = new HashMap<String, UserId>();
+		userDb.put("Anakin Skywalker", new UserId(1));
+		userDb.put("Yoda", new UserId(2));
+		userDb.put("Mace Windu", new UserId(3));
+		userDb.put("Obi-Wan Kenobi", new UserId(4));
 	}
 	
 	public AccountServer(MessageService ms) {
@@ -53,11 +54,11 @@ public class AccountServer implements Runnable, AccountService {
 		return ms;
 	}
 
-	public int getUserId(String userName) {
+	public UserId getUserId(String userName) {
 		if (userDb.containsKey(userName)) {
 			return userDb.get(userName);
 		} else {
-			return 0;
+			return null;
 		}
 	}
 	
