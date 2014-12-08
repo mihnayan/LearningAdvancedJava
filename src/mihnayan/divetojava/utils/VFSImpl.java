@@ -96,7 +96,7 @@ public class VFSImpl implements VFS {
 	}
 	
 	private File getFile(String path) {
-		String fullPath = root + File.pathSeparator + path;
+		String fullPath = root + path;
 		return new File(fullPath);
 	}
 	
