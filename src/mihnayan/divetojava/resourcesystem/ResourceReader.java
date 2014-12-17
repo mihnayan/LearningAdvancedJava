@@ -14,6 +14,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
 public class ResourceReader extends DefaultHandler {
 	
 //	private String resourceFile;
+	
+	private final static String ROOT_NAME = "resource";
 
 	public ResourceReader() {
 		super();
@@ -38,6 +40,8 @@ public class ResourceReader extends DefaultHandler {
 	
 	public void startElement(String uri, String localName, 
 			String qName, Attributes attr) throws SAXException {
+		
+		if (ROOT_NAME.equals(localName)) System.out.println(attr.getValue("name"));
 		
 		if ("".equals (uri))
 		    System.out.println("Start element: " + qName);
