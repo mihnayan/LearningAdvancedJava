@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Logger;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -13,6 +14,8 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import mihnayan.divetojava.frontend.GameFrontend;
+import mihnayan.divetojava.utils.ReflectionHelper;
 import mihnayan.divetojava.utils.VFS;
 import mihnayan.divetojava.utils.VFSImpl;
 
@@ -22,6 +25,8 @@ import mihnayan.divetojava.utils.VFSImpl;
  *
  */
 public class ResourceFactory {
+	
+	private static Logger log = Logger.getLogger(ResourceFactory.class.getName());
 	
 	private static ResourceFactory resourceFactory;
 	private static final String RESOURCE_DIRECTORY = "data\\";
@@ -41,6 +46,7 @@ public class ResourceFactory {
 		}
 		
 		public void read(String resourceFile) {
+			log.info("Reading resource " + resourceFile);
 			XMLReader reader = null;
 			FileReader fileReader = null;
 			try {
@@ -69,7 +75,7 @@ public class ResourceFactory {
 			if (!ROOT_NAME.equals(localName)) {
 				currentElement = qName;
 			} else {
-				createResource(attr.getValue("name"));
+				createResource(attr.getValue("className"));
 			}
 		}
 		
@@ -81,22 +87,15 @@ public class ResourceFactory {
 		@Override
 		public void characters(char[] ch, int start, int length)
 				throws SAXException {
+			if (currentElement != null) {
+				String value = new String(ch, start, length);
+				ReflectionHelper.setFieldValue(resource, currentElement, value);
+			}
 		}
 
 		private void createResource(String resourceName) {
-			try {
-				resource = (Resource) Class.forName(PACKAGE_NAME + "." + resourceName).newInstance();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			}
+			resource = 
+					(Resource) ReflectionHelper.createInstance(PACKAGE_NAME + "." + resourceName);
 		}
 		
 	}

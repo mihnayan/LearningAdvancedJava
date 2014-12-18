@@ -7,11 +7,4 @@ public class GameSessionResource implements Resource {
 	private int requiredPlayers;
 	private int boardGridSize;
 	
-	@Override
-	public void addParameter(String name, Object value) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	
 }
