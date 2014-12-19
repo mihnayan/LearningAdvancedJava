@@ -117,7 +117,7 @@ public class ResourceFactory {
 		}
 		ResourceReader reader = new ResourceReader();
 		reader.read(fileSystem.getAbsolutePath(resourceFile));
-		return null;
+		return reader.getResource();
 	}
 	
 }
