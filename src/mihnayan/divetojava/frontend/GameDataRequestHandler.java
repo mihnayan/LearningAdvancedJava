@@ -16,9 +16,6 @@ import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;
-import mihnayan.divetojava.resourcesystem.GameSessionResource;
-import mihnayan.divetojava.resourcesystem.ResourceFactory;
-import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
 
 public class GameDataRequestHandler extends RequestHandler {
 	
@@ -117,16 +114,8 @@ public class GameDataRequestHandler extends RequestHandler {
 	}
 	
 	private void startGame() {
-		GameSessionResource gsr = null;
-		try {
-			gsr = (GameSessionResource) ResourceFactory.instance().get(GameSessionResource.class);
-		} catch (ResourceNotExistException e) {
-			log.log(Level.WARNING, 
-					"Can't start game! Cause: not found resource " 
-							+ GameSessionResource.class.getName() + "!");
-			return;
-		}
-		if (LoginRequestHandler.authenticatedUsers.size() < gsr.getRequiredPlayers()) return;
+		if (LoginRequestHandler.authenticatedUsers.size() < 
+				MainGameMechanics.getRequiredPlayerCount()) return;
 		Iterator<UserId> iterator = LoginRequestHandler.authenticatedUsers.keySet().iterator();
 		UserId user1 = iterator.next();
 		UserId user2 = iterator.next();

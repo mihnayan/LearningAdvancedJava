@@ -3,8 +3,6 @@ package mihnayan.divetojava.utils;
 import java.lang.reflect.Field;
 import java.util.logging.Logger;
 
-import mihnayan.divetojava.frontend.GameFrontend;
-
 public class ReflectionHelper {
 	
 	private static Logger log = Logger.getLogger(ReflectionHelper.class.getName());

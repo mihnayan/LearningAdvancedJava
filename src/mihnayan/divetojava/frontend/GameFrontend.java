@@ -6,7 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -23,8 +22,6 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class GameFrontend extends AbstractHandler implements Runnable, Frontend {
-	
-	private static Logger log = Logger.getLogger(GameFrontend.class.getName());
 	
 	private static Map<String, Class<? extends RequestHandler>> targets = 
 			new HashMap<String, Class<? extends RequestHandler>>();
