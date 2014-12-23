@@ -5,6 +5,8 @@ import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.frontend.GameFrontend;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;
 import mihnayan.divetojava.msgsystem.MessageSystem;
+import mihnayan.divetojava.resourcesystem.ResourceFactory;
+import mihnayan.divetojava.resourcesystem.ResourceLoadingException;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -14,6 +16,14 @@ import org.eclipse.jetty.server.session.SessionHandler;
 public class DTJServer {
 
 	public static void main(String[] args) throws Exception {
+		
+		ResourceFactory resourceFactory = ResourceFactory.instance();
+		try {
+			resourceFactory.loadResources();
+		} catch(ResourceLoadingException e) {
+			System.out.println("Can't run server: resources loading error!");
+			throw new Exception(e);
+		}
 		
 		MessageService ms = new MessageSystem();
 		

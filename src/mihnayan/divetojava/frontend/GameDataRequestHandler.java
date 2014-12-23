@@ -27,8 +27,6 @@ public class GameDataRequestHandler extends RequestHandler {
 	public static volatile GameState gameState = GameState.WAITING_FOR_QUORUM;
 	public static volatile GameData gameData = null;
 	
-	private static final String GAME_RESOURCE_FILE = "GameResource.xml";
-	
 	private String sessionId;
 	private String userName;
 	private UserId userId;
@@ -121,9 +119,11 @@ public class GameDataRequestHandler extends RequestHandler {
 	private void startGame() {
 		GameSessionResource gsr = null;
 		try {
-			gsr = (GameSessionResource) ResourceFactory.instance().get(GAME_RESOURCE_FILE);
+			gsr = (GameSessionResource) ResourceFactory.instance().get(GameSessionResource.class);
 		} catch (ResourceNotExistException e) {
-			log.log(Level.WARNING, "Can't start game! Cause: " + GAME_RESOURCE_FILE + " not found.");
+			log.log(Level.WARNING, 
+					"Can't start game! Cause: not found resource " 
+							+ GameSessionResource.class.getName() + "!");
 			return;
 		}
 		if (LoginRequestHandler.authenticatedUsers.size() < gsr.getRequiredPlayers()) return;
