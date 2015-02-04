@@ -13,71 +13,94 @@ import mihnayan.divetojava.resourcesystem.GameSessionResource;
 import mihnayan.divetojava.resourcesystem.ResourceFactory;
 import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
 
+/**
+ * Class represented the main game mechanics.
+ * @author Mikhail Mangushev (Mihnayan)
+ */
 public class MainGameMechanics implements GameMechanics, Runnable {
 
-	private static Logger log = Logger.getLogger(MainGameMechanics.class.getName());
-	
-	private MessageService ms;
-	private Address address;
-	private GameSession gs;
-	private Frontend frontend;
-	
-	public MainGameMechanics(MessageService ms, Frontend frontend) {
-		this.ms = ms;
-		this.frontend = frontend;
-		address = new Address();
-		ms.getAddressService().setAddress(this);
-	}
-	
-	public static int getRequiredPlayerCount() {
-		try {
-			GameSessionResource gsr = 
-					(GameSessionResource) ResourceFactory.instance().get(GameSessionResource.class);
-			return gsr.getRequiredPlayers();
-			
-		} catch (ResourceNotExistException e) {
-			log.log(Level.WARNING, "Can't start game! Cause: not found resource " 
-					+ GameSessionResource.class.getName() + "!");
-		}
-		return Integer.MAX_VALUE;
-	}
+    private static Logger log = Logger.getLogger(MainGameMechanics.class
+            .getName());
 
-	@Override
-	public void run() {
-		while (true) {
-			try {		
-				ms.execForAbonent(this);
-				sendGameData();
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+    private static final int SLEEP_TIME = 100;
 
-	@Override
-	public MessageService getMessageService() {
-		return ms;
-	}
+    private MessageService ms;
+    private Address address;
+    private GameSession gs;
+    private Frontend frontend;
 
-	@Override
-	public Address getAddress() {
-		return address;
-	}
-	
-	@Override
-	public void startGameSession(UserId user1, UserId user2) {
-		if (gs == null) {
-			gs = new GameSession(user1, user2);
-		}
-	}
-	
-	private void sendGameData() {
-		if (gs == null) return;
-		GameDataImpl gd = new GameDataImpl();
-		gd.setElapsedTime((new Date()).getTime() - gs.getStartTime());
-		MsgSetGameData msg = new MsgSetGameData(address, frontend.getAddress(), gd);
-		ms.sendMessage(msg);
-	}
+    /**
+     * Creates MainGameMechanics object.
+     * @param ms Real message system for interaction with other components.
+     * @param frontend The Frontend object, in the address which will be sent the current
+     *        state of game.
+     */
+    public MainGameMechanics(MessageService ms, Frontend frontend) {
+        this.ms = ms;
+        this.frontend = frontend;
+        address = new Address();
+        ms.getAddressService().setAddress(this);
+    }
+
+    /**
+     * Returns count of players required for start game session.  The required number of players
+     * specified in the GameResource.xml resource.
+     * @return The number of players required for start game session.
+     *         Returns {@link Integer#MAX_VALUE} if corresponding resource was not found.
+     */
+    public static int getRequiredPlayerCount() {
+        try {
+            GameSessionResource gsr = (GameSessionResource) ResourceFactory
+                    .instance().get(GameSessionResource.class);
+            return gsr.getRequiredPlayers();
+
+        } catch (ResourceNotExistException e) {
+            log.log(Level.WARNING,
+                    "Can't start game! Cause: not found resource "
+                            + GameSessionResource.class.getName() + "!");
+        }
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                ms.execForAbonent(this);
+                sendGameData();
+                Thread.sleep(SLEEP_TIME);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public MessageService getMessageService() {
+        return ms;
+    }
+
+    @Override
+    public Address getAddress() {
+        return address;
+    }
+
+    @Override
+    public void startGameSession(UserId user1, UserId user2) {
+        if (gs == null) {
+            gs = new GameSession(user1, user2);
+        }
+    }
+
+    private void sendGameData() {
+        if (gs == null) {
+            return;
+        }
+        GameDataImpl gd = new GameDataImpl();
+        gd.setElapsedTime((new Date()).getTime() - gs.getStartTime());
+        MsgSetGameData msg = new MsgSetGameData(address, frontend.getAddress(),
+                gd);
+        ms.sendMessage(msg);
+    }
 
 }

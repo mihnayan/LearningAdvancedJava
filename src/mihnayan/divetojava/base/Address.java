@@ -3,20 +3,23 @@ package mihnayan.divetojava.base;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Represents abonent address
- * @author Mikhail Mangushev
+ * Represents the address of recipient in message system.
+ * @author Mikhail Mangushev (Mihnayan)
  *
  */
 public class Address {
-	static private AtomicInteger abonentCreator = new AtomicInteger();
-	final private int abonentId;
-	
-	public Address() {
-		this.abonentId = abonentCreator.incrementAndGet();
-	}
-	
-	@Override
-	public int hashCode() {
-		return abonentId;
-	}
+    private static AtomicInteger abonentCreator = new AtomicInteger();
+    private final int abonentId;
+
+    /**
+     * Constructs the address.
+     */
+    public Address() {
+        this.abonentId = abonentCreator.incrementAndGet();
+    }
+
+    @Override
+    public int hashCode() {
+        return abonentId;
+    }
 }

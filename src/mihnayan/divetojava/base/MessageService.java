@@ -1,12 +1,26 @@
 package mihnayan.divetojava.base;
 
-import mihnayan.divetojava.msgsystem.AddressSrv;
-
+/**
+ * The message service interface. Describes the commands for sending messages and manipulating them.
+ * @author Mikhail Mangushev (Mihnayan)
+ */
 public interface MessageService {
 
-	public void sendMessage(Msg message);
-	
-	public void execForAbonent(Abonent abonent);
-	
-	public AddressSrv getAddressService();
+    /**
+     * Sends the message.
+     * @param message The outgoing message.
+     */
+    void sendMessage(Msg message);
+
+    /**
+     * Executes all commands for recipient.
+     * @param abonent The recipient whose commands must be executed.
+     */
+    void execForAbonent(Abonent abonent);
+
+    /**
+     * Returns address service for this message service.
+     * @return AddressService object.
+     */
+    AddressService getAddressService();
 }

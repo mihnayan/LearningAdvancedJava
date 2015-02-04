@@ -1,31 +1,42 @@
 package mihnayan.divetojava.base;
 
-
 /**
- * Class representing the message
- * @author Mikhail Mangushev
- *
+ * Abstract class representing the message.
+ * @author Mikhail Mangushev (Mihnayan)
  */
 public abstract class Msg {
-	final protected Address from;
-	final protected Address to;
-	
-	public Msg(Address from, Address to) {
-		this.from = from;
-		this.to = to;
-	}
-	
-	public Address getFrom() {
-		return from;
-	}
-	
-	public Address getTo() {
-		return to;
-	}
-	
-	/**
-	 * Starts execution of instructions that are stored in the abonent
-	 * @param abonent
-	 */
-	public abstract void exec(Abonent abonent);
+    protected final Address from;
+    protected final Address to;
+
+    /**
+     * Message constructor.
+     * @param from Sender
+     * @param to Recipient
+     */
+    public Msg(Address from, Address to) {
+        this.from = from;
+        this.to = to;
+    }
+
+    /**
+     * Returns Sender address.
+     * @return Address object
+     */
+    public Address getFrom() {
+        return from;
+    }
+
+    /**
+     * Returns Recipient address.
+     * @return Address object
+     */
+    public Address getTo() {
+        return to;
+    }
+
+    /**
+     * Starts execution of instructions that are stored in the abonent.
+     * @param abonent Executes instructions of abonent.
+     */
+    public abstract void exec(Abonent abonent);
 }

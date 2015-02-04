@@ -1,3 +1,8 @@
 package mihnayan.divetojava.resourcesystem;
 
-public interface Resource {}
+/**
+ * Main intarface for all resources.
+ * @author Mikhail Mangushev (Mihnayan)
+ */
+public interface Resource {
+}

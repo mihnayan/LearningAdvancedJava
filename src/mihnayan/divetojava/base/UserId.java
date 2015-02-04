@@ -1,40 +1,52 @@
 package mihnayan.divetojava.base;
 
+/**
+ * Class represented user Id on the system. User Id can be obtained through class implementing
+ * AccountService interface.
+ * @author Mikhail Mangushev (Mihnayan)
+ * @see AccountService#getUserId(String)
+ */
 public class UserId {
-	
-	private int id;
 
-	public UserId(int id) {
-		this.id = id;
-	}
+    private int id;
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + id;
-		return result;
-	}
+    /**
+     * User Id constructor.
+     * @param id Unique int identifier
+     */
+    public UserId(int id) {
+        this.id = id;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (!(obj instanceof UserId))
-			return false;
-		UserId other = (UserId) obj;
-		if (id != other.id)
-			return false;
-		return true;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + id;
+        return result;
+    }
 
-	@Override
-	public String toString() {
-		return ((Integer) id).toString();
-	}
-	
-	
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof UserId)) {
+            return false;
+        }
+        UserId other = (UserId) obj;
+        if (id != other.id) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return ((Integer) id).toString();
+    }
 
 }

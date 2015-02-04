@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource className="GameSessionResource">
-    <requiredPlayers>2</requiredPlayers>
-    <gameBoard>
-        <boardGridSize>8</boardGridSize>
-    </gameBoard>
+	<requiredPlayers>2</requiredPlayers>
+	<gameBoard>
+		<boardGridSize>8</boardGridSize>
+	</gameBoard>
 </resource>
