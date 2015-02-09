@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource className="DBConnectionResource">
+    <connectionString>jdbc:mysql://localhost:3306/testDb</connectionString>
+    <userName>db_owner</userName>
+    <password>the_password</password>
+</resource>

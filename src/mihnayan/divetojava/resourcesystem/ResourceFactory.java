@@ -59,7 +59,11 @@ public final class ResourceFactory {
             if (!ROOT_NAME.equals(localName)) {
                 currentElement = qName;
             } else {
-                createResource(attr.getValue("className"));
+                try {
+                    createResource(attr.getValue("className"));
+                } catch (ResourceLoadingException e) {
+                    throw new SAXException(e);
+                }
             }
         }
 
@@ -78,10 +82,14 @@ public final class ResourceFactory {
             }
         }
 
-        private void createResource(String resourceName) {
+        private void createResource(String resourceName) throws ResourceLoadingException {
             resource = (Resource) ReflectionHelper.createInstance(PACKAGE_NAME
                     + "." + resourceName);
-            resources.put(resource.getClass(), resource);
+            if (resource != null) {
+                resources.put(resource.getClass(), resource);
+            } else {
+                throw new ResourceLoadingException("Can't create resource '" + resourceName + "'!");
+            }
         }
 
     }
