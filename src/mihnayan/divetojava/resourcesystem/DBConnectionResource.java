@@ -6,9 +6,17 @@ package mihnayan.divetojava.resourcesystem;
  */
 public class DBConnectionResource implements Resource {
 
+    private String driverClass;
     private String connectionString;
     private String userName;
     private String password;
+
+    /**
+     * @return Class name for database driver.
+     */
+    public String getDriverClass() {
+        return driverClass;
+    }
 
     /**
      * @return Connection string (URI) for connecting to database.

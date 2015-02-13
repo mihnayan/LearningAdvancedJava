@@ -170,7 +170,7 @@ public final class ResourceFactory {
             throw new ResourceNotExistException("Resource "
                     + resourceClass.getName() + " was not found!");
         }
-        return resources.get(GameSessionResource.class);
+        return resources.get(resourceClass);
     }
 
     private void readXMLResource(String resourceFile, DefaultHandler handler)
