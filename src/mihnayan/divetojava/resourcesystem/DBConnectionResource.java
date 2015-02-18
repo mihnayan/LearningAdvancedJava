@@ -7,7 +7,10 @@ package mihnayan.divetojava.resourcesystem;
 public class DBConnectionResource implements Resource {
 
     private String driverClass;
-    private String connectionString;
+    private String dbType;
+    private String server;
+    private String port;
+    private String dbName;
     private String userName;
     private String password;
 
@@ -22,7 +25,12 @@ public class DBConnectionResource implements Resource {
      * @return Connection string (URI) for connecting to database.
      */
     public String getConnectionString() {
-        return connectionString;
+        StringBuilder conStr = new StringBuilder();
+        conStr.append(dbType).append("://").
+               append(server).append(":").
+               append(port).append("/").
+               append(dbName);
+        return conStr.toString();
     }
 
     /**

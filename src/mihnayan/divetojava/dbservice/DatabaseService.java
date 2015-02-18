@@ -3,6 +3,8 @@ package mihnayan.divetojava.dbservice;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
@@ -18,7 +20,12 @@ import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
  */
 public class DatabaseService implements Abonent, Runnable {
 
+    private static Logger log = Logger.getLogger(DatabaseService.class.getName());
+
+    private static final int SLEEP_TIME = 100;
+
     private MessageService ms;
+    private Address address;
     private DBConnectionResource connectionResource;
     private Connection connection;
 
@@ -27,7 +34,6 @@ public class DatabaseService implements Abonent, Runnable {
      * @throws CreateServiceException occurs when the service cannot be created
      */
     public DatabaseService(MessageService ms) throws CreateServiceException {
-        this.ms = ms;
         try {
             connectionResource = (DBConnectionResource)
                     ResourceFactory.instance().get(DBConnectionResource.class);
@@ -35,32 +41,37 @@ public class DatabaseService implements Abonent, Runnable {
         } catch (ClassNotFoundException | ResourceNotExistException e) {
             throw new CreateServiceException(e);
         }
+        this.ms = ms;
+        address = new Address();
     }
 
     @Override
     public void run() {
-        DBConnectionResource dbcr;
         try {
-            dbcr = (DBConnectionResource)
-                    ResourceFactory.instance().get(DBConnectionResource.class);
+            connection = DriverManager.getConnection(connectionResource.getConnectionString(),
+                    connectionResource.getUserName(), connectionResource.getPassword());
+        } catch (SQLException e) {
+            log.log(Level.WARNING, e.getMessage());
+        }
 
-            connection = DriverManager.getConnection(dbcr.getConnectionString(),
-                    dbcr.getUserName(), dbcr.getPassword());
-        } catch (ResourceNotExistException | SQLException e) {
-            e.printStackTrace();
+        while (true) {
+            try {
+                ms.execForAbonent(this);
+                Thread.sleep(SLEEP_TIME);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
     public MessageService getMessageService() {
-        // TODO Auto-generated method stub
-        return null;
+        return ms;
     }
 
     @Override
     public Address getAddress() {
-        // TODO Auto-generated method stub
-        return null;
+        return address;
     }
 
 }

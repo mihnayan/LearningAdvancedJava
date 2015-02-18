@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource className="DBConnectionResource">
     <driverClass>com.mysql.jdbc.Driver</driverClass>
-    <connectionString>jdbc:mysql://localhost:3306/testDb</connectionString>
+    <dbType>jdbc:mysql</dbType>
+    <server>localhost</server>
+    <port>3306</port>
+    <dbName>testDb</dbName>
     <userName>db_owner</userName>
     <password>the_password</password>
 </resource>
