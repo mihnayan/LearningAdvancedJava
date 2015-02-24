@@ -43,7 +43,7 @@ final class DTJServer {
         try {
             dbService = new DatabaseService(ms);
         } catch (CreateServiceException e) {
-            System.out.println("Can't run server: " 
+            System.out.println("Can't run server: "
                     + "error occurred when creating the database service");
             throw new Exception(e);
         }
