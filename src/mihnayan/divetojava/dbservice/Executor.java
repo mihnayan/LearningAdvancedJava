@@ -1,6 +1,7 @@
 package mihnayan.divetojava.dbservice;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -43,9 +44,34 @@ public final class Executor {
      * @param con Connection that is used for executing of SQL command.
      * @param sql SQL string.
      * @param handler Handler that handles result of query.
+     * @param <T> Any type returned after handling the query results.
+     * @return An object of type T which may contain data resulting from handling the request.
      */
-    public static void execQuery(Connection con, String sql, ResultHandler handler) {
+    public static <T> T execQuery(Connection con, String sql, ResultHandler<T> handler) {
+        Statement stmt = null;
+        ResultSet result = null;
+        T value = null;
+        try {
+            stmt = con.createStatement();
+            stmt.execute(sql);
+            result = stmt.getResultSet();
+            value = handler.handle(result);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (result != null) {
+                    result.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
 
+        return value;
     }
 
     private Executor() {
