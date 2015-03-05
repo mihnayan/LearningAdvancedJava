@@ -17,6 +17,10 @@ public class UserId {
     public UserId(int id) {
         this.id = id;
     }
+    
+    public UserId(String id) {
+        // method stab for working with user id in String format
+    }
 
     @Override
     public int hashCode() {

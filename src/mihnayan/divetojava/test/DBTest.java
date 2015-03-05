@@ -4,10 +4,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import mihnayan.divetojava.dbservice.Executor;
 import mihnayan.divetojava.dbservice.ResultHandler;
+import mihnayan.divetojava.dbservice.UserDAO;
+import mihnayan.divetojava.dbservice.UserDataSet;
 
 /**
  * Simple test class for testing classes that work with database.
@@ -21,9 +25,16 @@ public final class DBTest {
     public static final String PASSWORD = "test";
 
     //SQLs
+    public static final String DROP_TABLE = "DROP TABLE user";
+    
     public static final String CREATE_TABLE =
-            "CREATE TABLE user(id INTEGER AUTO_INCREMENT PRIMARY KEY, "
-            + "user_name VARCHAR(50) NOT NULL UNIQUE, full_name VARCHAR(100))";
+            "CREATE TABLE user(id VARCHAR(40) PRIMARY KEY DEFAULT '', "
+            + "username VARCHAR(50) NOT NULL UNIQUE, fullname VARCHAR(100))";
+    
+    public static final String CREATE_TRIGGER = 
+            "CREATE TRIGGER user_BEFORE_INSERT "
+            + "BEFORE INSERT ON user FOR EACH ROW "
+            + " begin set new.id = uuid();  end";
 
     public static final String INSERT_DATA =
             "INSERT INTO user(user_name, full_name) VALUES ('jbond', 'James Bond'), "
@@ -37,6 +48,11 @@ public final class DBTest {
     public static final int COL_USER_NAME = 2;
     public static final int COL_FULL_NAME = 3;
 
+    public static void printUser(UserDataSet user) {
+        System.out.println(user.getId() + ", " + user.getUsername() + " ("
+                + user.getFullName() + ")");
+    }
+    
     /**
      * Entry point of DBTest class.
      * @param args No parameters are required.
@@ -48,31 +64,40 @@ public final class DBTest {
             System.out.println(con.getMetaData().getDatabaseProductName() + " "
                     + con.getMetaData().getDatabaseMajorVersion());
 
+            //Drop table
+            System.out.println(Executor.execCommand(con, DROP_TABLE));
+            
             //Create table
             System.out.println(Executor.execCommand(con, CREATE_TABLE));
+            
+            //Create trigger
+            System.out.println(Executor.execCommand(con, CREATE_TRIGGER));
 
             //Insert data
-            System.out.println(Executor.execCommand(con, INSERT_DATA));
+            UserDAO dao = new UserDAO(con);
+            
+            UserDataSet dataSet = new UserDataSet("jbond");
+            dataSet.setFullName("James Bond");
+            dao.add(dataSet);
+            
+            dataSet = new UserDataSet("fgump");
+            dataSet.setFullName("Forest Gump");
+            dao.add(dataSet);
+            
+            dataSet = new UserDataSet("sman");
+            dataSet.setFullName("superman");
+            dao.add(dataSet);
 
             //Select and handle data
-            HashMap<Integer, String> recs = Executor.execQuery(con, SELECT_DATA,
-                    new ResultHandler<HashMap<Integer, String>>() {
-
-                public HashMap<Integer, String> handle(ResultSet result) {
-                    HashMap<Integer, String> vals = new HashMap<Integer, String>();
-                    try {
-                        while (result.next()) {
-                            vals.put(result.getInt(COL_ID),
-                                    result.getString(COL_USER_NAME)
-                                    + " (" + result.getString(COL_FULL_NAME) + ")");
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    return vals;
-                }
-            });
-            System.out.println(recs.toString());
+            System.out.println("\n List of users: ");
+            List<UserDataSet> users = dao.getList();
+            for (UserDataSet user : users) {
+                printUser(user);
+            }
+            
+            System.out.println("\n jbond: ");
+            printUser(dao.getByUsername("jbond"));
+            
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {

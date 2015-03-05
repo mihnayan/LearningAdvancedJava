@@ -13,8 +13,8 @@ public class UserDataSet {
     private String fullName;
 
     public UserDataSet(UserId id, String username) {
+        this(username);
         this.id = id;
-        this.username = username;
     }
 
     /**

@@ -1,6 +1,7 @@
 package mihnayan.divetojava.dbservice;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -72,6 +73,17 @@ public final class Executor {
         }
 
         return value;
+    }
+    
+    public static <T> T execQuery(PreparedStatement stmt, ResultHandler<T> handler)
+            throws SQLException {
+        
+        ResultSet result = stmt.executeQuery();
+        return handler.handle(result);
+    }
+    
+    public static PreparedStatement getStatement(Connection con, String sql) throws SQLException {
+        return con.prepareStatement(sql);
     }
 
     private Executor() {
