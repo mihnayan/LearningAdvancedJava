@@ -2,14 +2,11 @@ package mihnayan.divetojava.test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
+import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.dbservice.Executor;
-import mihnayan.divetojava.dbservice.ResultHandler;
 import mihnayan.divetojava.dbservice.UserDAO;
 import mihnayan.divetojava.dbservice.UserDataSet;
 
@@ -95,8 +92,13 @@ public final class DBTest {
                 printUser(user);
             }
             
-            System.out.println("\n jbond: ");
-            printUser(dao.getByUsername("jbond"));
+            System.out.println("\n jbond by username: ");
+            UserDataSet bond = dao.getByUsername("jbond");
+            printUser(bond);
+            
+            System.out.println("\n jbond by id: ");
+            UserId bondId = bond.getId();
+            printUser(dao.get(bondId));
             
         } catch (SQLException e) {
             e.printStackTrace();

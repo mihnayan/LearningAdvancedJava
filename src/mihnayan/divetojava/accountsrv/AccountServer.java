@@ -28,10 +28,10 @@ public class AccountServer implements Runnable, AccountService {
     static {
         int idCount = 0;
         userDb = new HashMap<String, UserId>();
-        userDb.put("Anakin Skywalker", new UserId(++idCount));
-        userDb.put("Yoda", new UserId(++idCount));
-        userDb.put("Mace Windu", new UserId(++idCount));
-        userDb.put("Obi-Wan Kenobi", new UserId(++idCount));
+        userDb.put("Anakin Skywalker", new UserId(Integer.toString(++idCount)));
+        userDb.put("Yoda", new UserId(Integer.toString(++idCount)));
+        userDb.put("Mace Windu", new UserId(Integer.toString(++idCount)));
+        userDb.put("Obi-Wan Kenobi", new UserId(Integer.toString(++idCount)));
     }
 
     /**
