@@ -5,10 +5,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
+import mihnayan.divetojava.base.UserDataSet;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.dbservice.Executor;
 import mihnayan.divetojava.dbservice.UserDAO;
-import mihnayan.divetojava.dbservice.UserDataSet;
 
 /**
  * Simple test class for testing classes that work with database.

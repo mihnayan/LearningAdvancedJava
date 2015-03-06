@@ -1,6 +1,5 @@
-package mihnayan.divetojava.dbservice;
+package mihnayan.divetojava.base;
 
-import mihnayan.divetojava.base.UserId;
 
 /**
  * Represents a single entry in the table 'USER'.

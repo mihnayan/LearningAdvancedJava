@@ -3,7 +3,7 @@ package mihnayan.divetojava;
 import mihnayan.divetojava.accountsrv.AccountServer;
 import mihnayan.divetojava.base.CreateServiceException;
 import mihnayan.divetojava.base.MessageService;
-import mihnayan.divetojava.dbservice.DatabaseService;
+import mihnayan.divetojava.dbservice.MainDatabaseService;
 import mihnayan.divetojava.frontend.GameFrontend;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;
 import mihnayan.divetojava.msgsystem.MessageSystem;
@@ -39,9 +39,9 @@ final class DTJServer {
 
         MessageService ms = new MessageSystem();
 
-        DatabaseService dbService = null;
+        MainDatabaseService dbService = null;
         try {
-            dbService = new DatabaseService(ms);
+            dbService = new MainDatabaseService(ms);
         } catch (CreateServiceException e) {
             System.out.println("Can't run server: "
                     + "error occurred when creating the database service");

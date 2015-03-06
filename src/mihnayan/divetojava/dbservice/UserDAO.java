@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import mihnayan.divetojava.base.UserDataSet;
 import mihnayan.divetojava.base.UserId;
 
 public class UserDAO {
