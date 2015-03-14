@@ -54,7 +54,7 @@ var showWelcome = function (userData) {
 			showAlert('success', 'You were successfully authenticated :-)', true);
 			showUserLoginInfo();
 		},
-		'NOT_LOGGED': function () {
+		'FAILED': function () {
 			showAlert('warning', 'Sorry, you can not be authenticated with username <strong> \"'
 					+ userName + '\"</strong>! '
 					+ 'You can <a href=\"http://localhost:8080\">try to sign in again</a>');

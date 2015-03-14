@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import mihnayan.divetojava.base.UserDataSet;
+import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.dbservice.Executor;
 import mihnayan.divetojava.dbservice.UserDAO;
@@ -45,7 +45,7 @@ public final class DBTest {
     public static final int COL_USER_NAME = 2;
     public static final int COL_FULL_NAME = 3;
 
-    public static void printUser(UserDataSet user) {
+    public static void printUser(User user) {
         System.out.println(user.getId() + ", " + user.getUsername() + " ("
                 + user.getFullName() + ")");
     }
@@ -73,27 +73,27 @@ public final class DBTest {
             //Insert data
             UserDAO dao = new UserDAO(con);
             
-            UserDataSet dataSet = new UserDataSet("jbond");
+            User dataSet = new User("jbond");
             dataSet.setFullName("James Bond");
             dao.add(dataSet);
             
-            dataSet = new UserDataSet("fgump");
+            dataSet = new User("fgump");
             dataSet.setFullName("Forest Gump");
             dao.add(dataSet);
             
-            dataSet = new UserDataSet("sman");
+            dataSet = new User("sman");
             dataSet.setFullName("superman");
             dao.add(dataSet);
 
             //Select and handle data
             System.out.println("\n List of users: ");
-            List<UserDataSet> users = dao.getList();
-            for (UserDataSet user : users) {
+            List<User> users = dao.getList();
+            for (User user : users) {
                 printUser(user);
             }
             
             System.out.println("\n jbond by username: ");
-            UserDataSet bond = dao.getByUsername("jbond");
+            User bond = dao.getByUsername("jbond");
             printUser(bond);
             
             System.out.println("\n jbond by id: ");

@@ -1,6 +1,7 @@
 package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
@@ -14,7 +15,9 @@ import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
+import mihnayan.divetojava.base.UserSession;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;
 
 /**
@@ -31,9 +34,8 @@ public class GameDataRequestHandler extends RequestHandler {
     public static volatile GameData gameData = null;
 
     private String sessionId;
-    private String userName;
-    private UserId userId;
-    private AuthState loginStatus = AuthState.NOT_LOGGED;
+    private User user;
+    private AuthState loginStatus = AuthState.FAILED;
 
     /**
      * Creates GameDataRequestHandler object.
@@ -44,15 +46,13 @@ public class GameDataRequestHandler extends RequestHandler {
     public GameDataRequestHandler(HttpServletRequest request, Abonent abonent) {
         super(request, abonent);
         sessionId = request.getSession().getId();
-        HttpSession session = LoginRequestHandler.getSession(sessionId);
-        if (session == null || LoginRequestHandler.getAuthState(session) != AuthState.LOGGED) {
+        UserSession session = LoginRequestHandler.getAuthenticatedSession(sessionId);
+        if (session == null) {
             return;
         }
 
         loginStatus = AuthState.LOGGED;
-        userId = (UserId) session.getAttribute("userId");
-        userName = LoginRequestHandler.authenticatedUsers.get(userId)
-                .getUserName();
+        user = session.getUser();
 
         if (gameState != GameState.GAMEPLAY) {
             startGame();
@@ -82,35 +82,32 @@ public class GameDataRequestHandler extends RequestHandler {
     @Override
     public String toJSON() {
         return "{" + "\"player\": {" + "\"userName\": "
-                + (userName == null ? null : "\"" + userName + "\"") + ", "
-                + "\"userId\": " + (userId == null ? 0 : userId) + "}, "
+                + (user == null ? null : "\"" + user.getUsername() + "\"") + ", "
+                + "\"userId\": \"" + (user == null ? "" : user.getId()) + "\"}, "
                 + "\"opponent\": {" + "\"userName\": \""
-                + getOpponentUserName(userId) + "\"" + "},"
+                //TODO: Здесь оппонента надо получать из gameData.
+                + defineOpponent(user).getUsername() + "\"" + "},"
                 + "\"gameState\": \"" + gameState + "\","
                 + "\"loginStatus\": \"" + loginStatus + "\","
                 + "\"gameData\": " + gameDataToJSON() + "}";
     }
 
     /**
-     * Returns the name of the first user whose ID does not match the ID of the
-     * user that sent the request
-     * @return username or empty string if playerId is null or status of game GameState
-     *         is not equals "GAMEPLAY".
+     * Returns the first user whose does not match of the user that sent the request.
+     * @return Opponent or null if opponent was not found.
      */
-    private String getOpponentUserName(UserId playerId) {
-        if (playerId == null || gameState != GameState.GAMEPLAY) {
-            return "";
+    private User defineOpponent(User player) {
+        if (player == null) {
+            return null;
         }
-
-        Set<UserId> keys = LoginRequestHandler.authenticatedUsers.keySet();
-        Iterator<UserId> iterator = keys.iterator();
-        UserId opponentId = iterator.next();
-        if (opponentId.equals(playerId)) {
-            opponentId = iterator.next();
+        
+        Collection<UserSession> userSessions = LoginRequestHandler.authenticatedSessions.values();
+        Iterator<UserSession> iterator = userSessions.iterator();
+        User opponent = player;
+        while (player.equals(opponent) && iterator.hasNext()) {
+            opponent = iterator.next().getUser();
         }
-
-        return LoginRequestHandler.authenticatedUsers.get(opponentId)
-                .getUserName();
+        return opponent;
     }
 
     private String gameDataToJSON() {
@@ -125,19 +122,20 @@ public class GameDataRequestHandler extends RequestHandler {
     }
 
     private void startGame() {
-        if (LoginRequestHandler.authenticatedUsers.size() < MainGameMechanics
-                .getRequiredPlayerCount()) {
+        if (gameState == GameState.GAMEPLAY ||
+                LoginRequestHandler.authenticatedSessions.size() < MainGameMechanics
+                    .getRequiredPlayerCount()) {
             return;
         }
-        Iterator<UserId> iterator = LoginRequestHandler.authenticatedUsers
-                .keySet().iterator();
-        UserId user1 = iterator.next();
-        UserId user2 = iterator.next();
+        User opponent = defineOpponent(user);
+        if (opponent == null) {
+            return;
+        }
 
         MessageService ms = abonent.getMessageService();
         Address to = ms.getAddressService().getAddress(MainGameMechanics.class);
-        ms.sendMessage(new MsgStartGameSession(abonent.getAddress(), to, user1,
-                user2));
+        ms.sendMessage(new MsgStartGameSession(abonent.getAddress(), to, user.getId(),
+                opponent.getId()));
         GameDataRequestHandler.gameState = GameState.GAMEPLAY;
         log.info("Start game message was sent");
     }

@@ -2,5 +2,5 @@ package mihnayan.divetojava.base;
 
 public interface DatabaseService extends Abonent {
 
-    UserDataSet getUser(UserId id);
+    User getUser(String username);
 }

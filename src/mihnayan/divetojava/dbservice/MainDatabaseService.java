@@ -10,8 +10,7 @@ import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.CreateServiceException;
 import mihnayan.divetojava.base.DatabaseService;
 import mihnayan.divetojava.base.MessageService;
-import mihnayan.divetojava.base.UserDataSet;
-import mihnayan.divetojava.base.UserId;
+import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.resourcesystem.DBConnectionResource;
 import mihnayan.divetojava.resourcesystem.ResourceFactory;
 import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
@@ -77,10 +76,10 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     }
     
     @Override
-    public UserDataSet getUser(UserId id) {
+    public User getUser(String username) {
         try {
             openConnection();
-            return (new UserDAO(connection)).get(id);
+            return (new UserDAO(connection)).getByUsername(username);
         } catch (SQLException e) {
             log.log(Level.WARNING, e.getMessage());
             return null;

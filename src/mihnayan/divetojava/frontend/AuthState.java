@@ -9,5 +9,5 @@ public enum AuthState {
     NEW,
     WAITING,
     LOGGED,
-    NOT_LOGGED
+    FAILED
 }

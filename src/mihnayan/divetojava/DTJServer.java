@@ -51,7 +51,7 @@ final class DTJServer {
         Server server = new Server(SERVER_PORT);
 
         GameFrontend frontend = new GameFrontend(ms);
-        AccountServer accountServer = new AccountServer(ms);
+        AccountServer accountServer = new AccountServer(ms, frontend);
         MainGameMechanics gameMechanics = new MainGameMechanics(ms, frontend);
 
         (new Thread(frontend)).start();

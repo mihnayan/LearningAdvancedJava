@@ -24,8 +24,15 @@ public final class UserId {
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        return id.equals(obj);
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof UserId)) {
+            return false;
+        }
+        UserId other = (UserId) obj;
+        return id.equals(other.id);
     }
 
     @Override

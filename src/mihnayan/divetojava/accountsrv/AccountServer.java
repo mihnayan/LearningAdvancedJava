@@ -4,8 +4,12 @@ import java.util.HashMap;
 
 import mihnayan.divetojava.base.AccountService;
 import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
+import mihnayan.divetojava.base.UserSession;
+import mihnayan.divetojava.frontend.AuthState;
 
 /**
  * Class which authenticates a specific user for a specific session.
@@ -23,6 +27,9 @@ public class AccountServer implements Runnable, AccountService {
 
     private MessageService ms;
     private Address address;
+    private Frontend frontend;
+    
+    private HashMap<UserId, User> users = new HashMap<>();
 
     private static HashMap<String, UserId> userDb = new HashMap<String, UserId>();
     static {
@@ -37,10 +44,11 @@ public class AccountServer implements Runnable, AccountService {
     /**
      * @param ms Real message system for interaction with other components.
      */
-    public AccountServer(MessageService ms) {
+    public AccountServer(MessageService ms, Frontend frontend) {
         this.ms = ms;
         address = new Address();
         ms.getAddressService().setAddress(this);
+        this.frontend = frontend;
     }
 
     /**
@@ -61,18 +69,17 @@ public class AccountServer implements Runnable, AccountService {
     public MessageService getMessageService() {
         return ms;
     }
-
-    /**
-     * Returns UserId object by it username.
-     * @param userName username
-     * @return UserId object
-     */
-    public UserId getUserId(String userName) {
-        if (userDb.containsKey(userName)) {
-            return userDb.get(userName);
-        } else {
-            return null;
+    
+    @Override
+    public void authenticateUserSession(UserSession session, String userName) {
+        UserId userId = userDb.get(userName);
+        if (userId != null) {
+            User user = new User(userId, userName);
+            session.setUser(user);
         }
+        MsgSetAuthenticatedUserSession msg =
+                new MsgSetAuthenticatedUserSession(address, frontend.getAddress(), session);
+        ms.sendMessage(msg);
     }
 
     @Override

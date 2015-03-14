@@ -16,6 +16,7 @@ import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.UserId;
+import mihnayan.divetojava.base.UserSession;
 
 /**
  * Helper class that handle requests for user authentication.
@@ -25,14 +26,13 @@ import mihnayan.divetojava.base.UserId;
 public class LoginRequestHandler extends RequestHandler {
 
     private static Logger log = Logger.getLogger(LoginRequestHandler.class.getName());
-
-    private static ConcurrentHashMap<String, HttpSession> sessions =
-            new ConcurrentHashMap<String, HttpSession>();
-    public static Map<UserId, UserProfile> authenticatedUsers = new HashMap<UserId, UserProfile>();
+    
+    public static ConcurrentHashMap<String, UserSession> authenticatedSessions =
+            new ConcurrentHashMap<>();
 
     private String processedSessionId;
     private String currentUserName;
-    private UserId currentUserId;
+    private UserId currentUserId = null;
     private AuthState loginStatus;
     private String statusText;
 
@@ -52,11 +52,24 @@ public class LoginRequestHandler extends RequestHandler {
         processedSession = request.getSession();
 
         processedSessionId = processedSession.getId();
-        currentUserName = (String) processedSession.getAttribute("userName");
-        if (currentUserName == null) {
-            currentUserName = request.getParameter(FRM_USER_NAME);
+        
+        // new
+        UserSession userSession = authenticatedSessions.get(processedSessionId);
+        if (userSession != null) {
+             currentUserName = userSession.getUser().getUsername();
+             currentUserId = userSession.getUser().getId();
+        } else {
+            currentUserName = (String) processedSession.getAttribute("userName");
+            if (currentUserName == null) {
+                currentUserName = request.getParameter(FRM_USER_NAME);
+            }
         }
-        currentUserId = (UserId) processedSession.getAttribute("userId");
+        
+//        currentUserName = (String) processedSession.getAttribute("userName");
+//        if (currentUserName == null) {
+//            currentUserName = request.getParameter(FRM_USER_NAME);
+//        }
+//        currentUserId = (UserId) processedSession.getAttribute("userId");
         loginStatus = getAuthState(processedSession);
     }
 
@@ -87,28 +100,17 @@ public class LoginRequestHandler extends RequestHandler {
      * @param sessionId Session Id for session that must be returned.
      * @return HttpSession object.
      */
-    public static HttpSession getSession(String sessionId) {
-        return sessions.get(sessionId);
+    public static UserSession getAuthenticatedSession(String sessionId) {
+        return authenticatedSessions.get(sessionId);
     }
 
-    /**
-     * Creates and puts user profile to it session.
-     * @param sessionId User session Id.
-     * @param userId User Id.
-     * @param userName Username.
-     */
-    //TODO: Probably this is unsafe method because client can to create and put user profile
-    // for other session
-    public static void setUser(String sessionId, UserId userId, String userName) {
-        HttpSession session = sessions.get(sessionId);
-        if (userId != null) {
-            session.setAttribute("userId", userId);
-            setAuthState(session, AuthState.LOGGED);
-            UserProfile userProfile = new UserProfile();
-            userProfile.setUserName(userName);
-            authenticatedUsers.put(userId, userProfile);
+
+    public static void setUser(UserSession userSession) {
+        if (userSession.getUser() != null) {
+            setAuthState(userSession.getHttpSession(), AuthState.LOGGED);
+            authenticatedSessions.put(userSession.getId(), userSession);
         } else {
-            setAuthState(session, AuthState.NOT_LOGGED);
+            setAuthState(userSession.getHttpSession(), AuthState.FAILED);
         }
     }
 
@@ -120,7 +122,7 @@ public class LoginRequestHandler extends RequestHandler {
             loginStatus = getAuthState(processedSession);
         }
 
-        if (loginStatus == AuthState.NOT_LOGGED) {
+        if (loginStatus == AuthState.FAILED) {
             unregisterSession(processedSession);
         }
 
@@ -150,31 +152,30 @@ public class LoginRequestHandler extends RequestHandler {
         return "{"
                 + "\"sessionId\": \"" + processedSessionId + "\", "
                 + "\"userName\": \"" + (currentUserName == null ? "" : currentUserName) + "\", "
-                + "\"userId\": " + (currentUserId == null ? 0 : currentUserId) + ", "
+                + "\"userId\": \"" + (currentUserId == null ? "" : currentUserId) + "\", "
                 + "\"loginStatus\": \"" + loginStatus + "\", "
                 + "\"text\": \"" + statusText + "\""
                 + "}";
     }
 
     private void registerSession(HttpSession session, String username) {
-
-        String sessionId = session.getId();
+        
+        UserSession userSession = new UserSession(session);
 
         session.setAttribute("userName", username);
-        session.setAttribute("userId", null);
         setAuthState(session, AuthState.WAITING);
-        sessions.put(sessionId, session);
 
         MessageService ms = abonent.getMessageService();
         Address to = ms.getAddressService().getAddress(AccountServer.class);
-
-        ms.sendMessage(new MsgGetUserId(abonent.getAddress(), to, username, sessionId));
+        
+        ms.sendMessage(
+                new MsgAuthenticateUserSession(abonent.getAddress(), to, userSession, username));
     }
 
     private void unregisterSession(HttpSession session) {
         setAuthState(session, AuthState.NEW);
         session.removeAttribute("userName");
-        sessions.remove(session.getId());
+//        sessions.remove(session.getId());
     }
 
 }

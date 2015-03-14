@@ -9,11 +9,10 @@ public interface Frontend extends Abonent {
 
     /**
      * Sets the session of authenticated user.
-     * @param sessionId The Id of user session
-     * @param userId The user Id received from the authentication system
-     * @param userName The username
+     * @param userSession User session that contains user data if user was successfully
+     * authenticated, or null if authentication was failed.
      */
-    void setUser(String sessionId, UserId userId, String userName);
+    void setAuthenticatedUserSession(UserSession userSession);
 
     /**
      * Sets the current game data.
