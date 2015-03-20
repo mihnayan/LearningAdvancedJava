@@ -53,6 +53,19 @@ public class User {
         User other = (User) obj;
         return id.equals(other.id) && username.equals(other.username);
     }
+
+    @Override
+    public String toString() {
+        return "name: " + username + "; id: " + id.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + id.hashCode();
+        result = 31 * result + username.hashCode();
+        return result;
+    }
     
     
 }

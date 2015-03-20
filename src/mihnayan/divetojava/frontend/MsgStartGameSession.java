@@ -1,8 +1,10 @@
 package mihnayan.divetojava.frontend;
 
+import java.util.Set;
+
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.GameMechanics;
-import mihnayan.divetojava.base.UserId;
+import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.msgsystem.MsgToGM;
 
 /**
@@ -11,24 +13,21 @@ import mihnayan.divetojava.msgsystem.MsgToGM;
  */
 public class MsgStartGameSession extends MsgToGM {
 
-    private UserId user1;
-    private UserId user2;
+    private Set<User> players;
 
     /**
      * Creates message to GameMechanics for start game session.
      * @param from Address of sender.
      * @param to Address of recipient (concrete GameMechanics implementation).
-     * @param user1 First user (player) Id.
-     * @param user2 Second user (player) Id.
+     * @param players Set of players.
      */
-    public MsgStartGameSession(Address from, Address to, UserId user1, UserId user2) {
+    public MsgStartGameSession(Address from, Address to, Set<User> players) {
         super(from, to);
-        this.user1 = user1;
-        this.user2 = user2;
+        this.players = players;
     }
 
     @Override
     public void exec(GameMechanics gm) {
-        gm.startGameSession(user1, user2);
+        gm.startGameSession(players);
     }
 }

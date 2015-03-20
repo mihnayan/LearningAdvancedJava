@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resource className="GameSessionResource">
-	<requiredPlayers>2</requiredPlayers>
+	<minPlayers>2</minPlayers>
+	<maxPlayers>3</maxPlayers>
 	<gameBoard>
 		<boardGridSize>8</boardGridSize>
 	</gameBoard>

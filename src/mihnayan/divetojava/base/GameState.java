@@ -1,4 +1,4 @@
-package mihnayan.divetojava.frontend;
+package mihnayan.divetojava.base;
 
 /**
  * Available statuses of the game.

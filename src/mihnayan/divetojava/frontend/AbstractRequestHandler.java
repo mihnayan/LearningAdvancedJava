@@ -3,25 +3,25 @@ package mihnayan.divetojava.frontend;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import mihnayan.divetojava.base.Abonent;
+import mihnayan.divetojava.base.Frontend;
 
 /**
  * Abstract class that provides the interface of request processing.
  * @author Mikhail Mangushev (Mihnayan)
  */
-public abstract class RequestHandler {
+public abstract class AbstractRequestHandler {
 
     protected HttpServletRequest request;
-    protected Abonent abonent;
+    protected Frontend frontend;
 
     /**
      * Creates and initializes the RequestHandler object.
      * @param request The request to be processed.
      * @param abonent The subscriber, who may receive and process the game data.
      */
-    public RequestHandler(HttpServletRequest request, Abonent abonent) {
+    public AbstractRequestHandler(HttpServletRequest request, Frontend frontend) {
         this.request = request;
-        this.abonent = abonent;
+        this.frontend = frontend;
     }
 
     /**

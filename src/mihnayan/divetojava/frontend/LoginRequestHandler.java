@@ -2,7 +2,9 @@ package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +16,9 @@ import javax.servlet.http.HttpSession;
 import mihnayan.divetojava.accountsrv.AccountServer;
 import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.MessageService;
+import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
 
@@ -23,7 +27,7 @@ import mihnayan.divetojava.base.UserSession;
  * @author Mikhail Mangushev (Mihnayan)
  *
  */
-public class LoginRequestHandler extends RequestHandler {
+public class LoginRequestHandler extends AbstractRequestHandler {
 
     private static Logger log = Logger.getLogger(LoginRequestHandler.class.getName());
     
@@ -47,8 +51,8 @@ public class LoginRequestHandler extends RequestHandler {
      * @param abonent The subscriber, who may receive and process the login data (typically,
      *        the implementation of the AccountService interface).
      */
-    public LoginRequestHandler(HttpServletRequest request, Abonent abonent) {
-        super(request, abonent);
+    public LoginRequestHandler(HttpServletRequest request, Frontend frontend) {
+        super(request, frontend);
         processedSession = request.getSession();
 
         processedSessionId = processedSession.getId();
@@ -113,6 +117,14 @@ public class LoginRequestHandler extends RequestHandler {
             setAuthState(userSession.getHttpSession(), AuthState.FAILED);
         }
     }
+    
+    public static Set<User> getAuthenticatedUsers() {
+        Set<User> users = new HashSet<>();
+        for (UserSession userSession : authenticatedSessions.values()) {
+            users.add(userSession.getUser());
+        }
+        return users;
+    }
 
     @Override
     public void handleRequest(HttpServletResponse response) {
@@ -165,11 +177,11 @@ public class LoginRequestHandler extends RequestHandler {
         session.setAttribute("userName", username);
         setAuthState(session, AuthState.WAITING);
 
-        MessageService ms = abonent.getMessageService();
+        MessageService ms = frontend.getMessageService();
         Address to = ms.getAddressService().getAddress(AccountServer.class);
         
         ms.sendMessage(
-                new MsgAuthenticateUserSession(abonent.getAddress(), to, userSession, username));
+                new MsgAuthenticateUserSession(frontend.getAddress(), to, userSession, username));
     }
 
     private void unregisterSession(HttpSession session) {

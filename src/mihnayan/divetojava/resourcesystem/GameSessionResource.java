@@ -6,15 +6,24 @@ package mihnayan.divetojava.resourcesystem;
  */
 public class GameSessionResource implements Resource {
 
-    private int requiredPlayers;
+    private int minPlayers;
+    private int maxPlayers;
     private int boardGridSize;
 
     /**
-     * Returns number of players is needed for start game.
+     * Returns minimum number of players is needed for start game.
      * @return int.
      */
-    public int getRequiredPlayers() {
-        return requiredPlayers;
+    public int getMinPlayers() {
+        return minPlayers;
+    }
+    
+    /**
+     * Returns the maximum number of players that can participate in the game.
+     * @return int
+     */
+    public int getMaxPlayers() {
+        return maxPlayers;
     }
 
     /**

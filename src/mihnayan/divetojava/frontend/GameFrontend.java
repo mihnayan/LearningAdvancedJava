@@ -6,6 +6,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +21,10 @@ import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
+import mihnayan.divetojava.gamemechanics.MainGameMechanics;
+import mihnayan.divetojava.resourcesystem.GameSessionResource;
+import mihnayan.divetojava.resourcesystem.ResourceFactory;
+import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -30,10 +36,12 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
  */
 public class GameFrontend extends AbstractHandler implements Runnable, Frontend {
 
+    private static Logger log = Logger.getLogger(GameFrontend.class.getName());
+    
     private static final int SLEEP_TIME = 100;
 
-    private static Map<String, Class<? extends RequestHandler>> targets =
-            new HashMap<String, Class<? extends RequestHandler>>();
+    private static Map<String, Class<? extends AbstractRequestHandler>> targets =
+            new HashMap<String, Class<? extends AbstractRequestHandler>>();
 
     static {
         targets.put("/login", LoginRequestHandler.class);
@@ -43,6 +51,8 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
     private MessageService ms;
     private Address address;
     private AtomicInteger handleCount;
+    
+    private int minPlayersCount;
 
     /**
      * @param ms Real message system for interaction with other components.
@@ -53,6 +63,17 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
         address = new Address();
 
         handleCount = new AtomicInteger();
+        
+        //TODO: ugly
+        try {
+            this.minPlayersCount =((GameSessionResource) ResourceFactory
+                    .instance().get(GameSessionResource.class)).getMinPlayers();
+        } catch (ResourceNotExistException e) {
+            this.minPlayersCount = Integer.MAX_VALUE;
+            log.log(Level.WARNING,
+                    "Can't start game! Cause: not found resource "
+                            + GameSessionResource.class.getName() + "!");
+        }
     }
 
     @Override
@@ -67,12 +88,12 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
         if (target == null || !targets.containsKey(target)) {
             return;
         }
-        Class<? extends RequestHandler> cl = targets.get(target);
+        Class<? extends AbstractRequestHandler> cl = targets.get(target);
         try {
-            Constructor<? extends RequestHandler> con =
-                    cl.getConstructor(HttpServletRequest.class, Abonent.class);
-            RequestHandler requestHandler = con.newInstance(new Object[] {request, this});
-            requestHandler.handleRequest(response);
+            Constructor<? extends AbstractRequestHandler> con =
+                    cl.getConstructor(HttpServletRequest.class, Frontend.class);
+            AbstractRequestHandler abstractRequestHandler = con.newInstance(new Object[] {request, this});
+            abstractRequestHandler.handleRequest(response);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (SecurityException e) {
@@ -120,4 +141,10 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
     public void setGameData(GameData gameData) {
         GameDataRequestHandler.gameData = gameData;
     }
+
+    @Override
+    public int getMinPlayersCount() {
+        return minPlayersCount;
+    }
+    
 }

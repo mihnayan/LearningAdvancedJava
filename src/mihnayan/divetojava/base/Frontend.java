@@ -19,4 +19,6 @@ public interface Frontend extends Abonent {
      * @param gameData Current game data
      */
     void setGameData(GameData gameData);
+    
+    int getMinPlayersCount();
 }

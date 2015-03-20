@@ -1,6 +1,13 @@
 package mihnayan.divetojava.gamemechanics;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import mihnayan.divetojava.base.GameData;
+import mihnayan.divetojava.base.GameSession;
+import mihnayan.divetojava.base.GameState;
+import mihnayan.divetojava.base.User;
 
 /**
  * The GameData interface implementation.
@@ -10,18 +17,28 @@ import mihnayan.divetojava.base.GameData;
  */
 public class GameDataImpl implements GameData {
 
-    private long elapsedTime;
+    private GameSession gameSession;
 
+    GameDataImpl(GameSession gameSession) {
+        this.gameSession = gameSession;
+    }
+    
     @Override
     public long getElapsedTime() {
-        return elapsedTime;
+        if (gameSession.getGameState() != GameState.GAMEPLAY) {
+            return 0L;
+        }
+        return (new Date()).getTime() - gameSession.getStartTime();
     }
 
-    /**
-     * Sets elapsed time in milliseconds from begin of game.
-     * @param elapsedTime The Long number representing the time in milliseconds.
-     */
-    public void setElapsedTime(long elapsedTime) {
-        this.elapsedTime = elapsedTime;
+    @Override
+    public List<User> getOpponents(User player) {
+        List<User> opponents = new ArrayList<>();
+        for (User opponent : gameSession.getPlayers()) {
+            if (!opponent.equals(player)) {
+                opponents.add(opponent);
+            }
+        }
+        return opponents;
     }
 }

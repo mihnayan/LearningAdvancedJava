@@ -27,7 +27,9 @@ public final class ResourceReaderTest {
             System.out.println(((GameSessionResource) resource)
                     .getBoardGridSize());
             System.out.println(((GameSessionResource) resource)
-                    .getRequiredPlayers());
+                    .getMinPlayers());
+            System.out.println(((GameSessionResource) resource)
+                    .getMaxPlayers());
 
         } catch (ResourceNotExistException e) {
             e.printStackTrace();

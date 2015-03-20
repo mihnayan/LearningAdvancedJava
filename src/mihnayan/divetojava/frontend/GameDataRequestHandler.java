@@ -13,7 +13,9 @@ import javax.servlet.http.HttpSession;
 
 import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
+import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.GameData;
+import mihnayan.divetojava.base.GameState;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
@@ -25,7 +27,7 @@ import mihnayan.divetojava.gamemechanics.MainGameMechanics;
  * @author Mikhail Mangushev (Mihnayan)
  *
  */
-public class GameDataRequestHandler extends RequestHandler {
+public class GameDataRequestHandler extends AbstractRequestHandler {
 
     private static Logger log = Logger.getLogger(GameDataRequestHandler.class
             .getName());
@@ -43,8 +45,8 @@ public class GameDataRequestHandler extends RequestHandler {
      * @param abonent The subscriber, who may receive and process the game data (typically,
      *        the implementation of the GameMechanics interface).
      */
-    public GameDataRequestHandler(HttpServletRequest request, Abonent abonent) {
-        super(request, abonent);
+    public GameDataRequestHandler(HttpServletRequest request, Frontend frontend) {
+        super(request, frontend);
         sessionId = request.getSession().getId();
         UserSession session = LoginRequestHandler.getAuthenticatedSession(sessionId);
         if (session == null) {
@@ -123,8 +125,7 @@ public class GameDataRequestHandler extends RequestHandler {
 
     private void startGame() {
         if (gameState == GameState.GAMEPLAY ||
-                LoginRequestHandler.authenticatedSessions.size() < MainGameMechanics
-                    .getRequiredPlayerCount()) {
+                LoginRequestHandler.authenticatedSessions.size() < frontend.getMinPlayersCount()) {
             return;
         }
         User opponent = defineOpponent(user);
@@ -132,10 +133,10 @@ public class GameDataRequestHandler extends RequestHandler {
             return;
         }
 
-        MessageService ms = abonent.getMessageService();
+        MessageService ms = frontend.getMessageService();
         Address to = ms.getAddressService().getAddress(MainGameMechanics.class);
-        ms.sendMessage(new MsgStartGameSession(abonent.getAddress(), to, user.getId(),
-                opponent.getId()));
+        ms.sendMessage(new MsgStartGameSession(frontend.getAddress(), to,
+                LoginRequestHandler.getAuthenticatedUsers()));
         GameDataRequestHandler.gameState = GameState.GAMEPLAY;
         log.info("Start game message was sent");
     }

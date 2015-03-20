@@ -1,14 +1,16 @@
 package mihnayan.divetojava.gamemechanics;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.GameMechanics;
+import mihnayan.divetojava.base.GameState;
 import mihnayan.divetojava.base.MessageService;
-import mihnayan.divetojava.base.UserId;
+import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.resourcesystem.GameSessionResource;
 import mihnayan.divetojava.resourcesystem.ResourceFactory;
 import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
@@ -26,8 +28,10 @@ public class MainGameMechanics implements GameMechanics, Runnable {
 
     private MessageService ms;
     private Address address;
-    private GameSession gs;
+    private GameSessionImpl gameSession;
     private Frontend frontend;
+    private int minPlayersCount;
+    private int maxPlayersCount;
 
     /**
      * Creates MainGameMechanics object.
@@ -40,26 +44,18 @@ public class MainGameMechanics implements GameMechanics, Runnable {
         this.frontend = frontend;
         address = new Address();
         ms.getAddressService().setAddress(this);
-    }
-
-    /**
-     * Returns count of players required for start game session.  The required number of players
-     * specified in the GameResource.xml resource.
-     * @return The number of players required for start game session.
-     *         Returns {@link Integer#MAX_VALUE} if corresponding resource was not found.
-     */
-    public static int getRequiredPlayerCount() {
+        
         try {
             GameSessionResource gsr = (GameSessionResource) ResourceFactory
                     .instance().get(GameSessionResource.class);
-            return gsr.getRequiredPlayers();
+            this.minPlayersCount = gsr.getMinPlayers();
+            this.maxPlayersCount = gsr.getMaxPlayers();
 
         } catch (ResourceNotExistException e) {
             log.log(Level.WARNING,
                     "Can't start game! Cause: not found resource "
                             + GameSessionResource.class.getName() + "!");
         }
-        return Integer.MAX_VALUE;
     }
 
     @Override
@@ -86,18 +82,23 @@ public class MainGameMechanics implements GameMechanics, Runnable {
     }
 
     @Override
-    public void startGameSession(UserId user1, UserId user2) {
-        if (gs == null) {
-            gs = new GameSession(user1, user2);
+    public void startGameSession(Set<User> players) {
+        if (gameSession == null) {
+            gameSession = new GameSessionImpl(minPlayersCount, maxPlayersCount);
+        }
+        if (gameSession.getGameState() != GameState.GAMEPLAY) {
+            for (User player : players) {
+                gameSession.addPlayer(player);
+            }
+            gameSession.startGame();
         }
     }
 
     private void sendGameData() {
-        if (gs == null) {
+        if (gameSession == null) {
             return;
         }
-        GameDataImpl gd = new GameDataImpl();
-        gd.setElapsedTime((new Date()).getTime() - gs.getStartTime());
+        GameDataImpl gd = new GameDataImpl(gameSession);
         MsgSetGameData msg = new MsgSetGameData(address, frontend.getAddress(),
                 gd);
         ms.sendMessage(msg);
