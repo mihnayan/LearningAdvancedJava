@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -13,15 +14,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
-import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
-import mihnayan.divetojava.gamemechanics.MainGameMechanics;
 import mihnayan.divetojava.resourcesystem.GameSessionResource;
 import mihnayan.divetojava.resourcesystem.ResourceFactory;
 import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
@@ -92,8 +90,8 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
         try {
             Constructor<? extends AbstractRequestHandler> con =
                     cl.getConstructor(HttpServletRequest.class, Frontend.class);
-            AbstractRequestHandler abstractRequestHandler = con.newInstance(new Object[] {request, this});
-            abstractRequestHandler.handleRequest(response);
+            AbstractRequestHandler requestHandler = con.newInstance(new Object[] {request, this});
+            requestHandler.buildResponse(response);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (SecurityException e) {
@@ -138,8 +136,15 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
     }
 
     @Override
-    public void setGameData(GameData gameData) {
-        GameDataRequestHandler.gameData = gameData;
+    public void setGameData(GameData gameData, User forUser) {
+        Iterator<UserSession> userSessions = 
+                LoginRequestHandler.authenticatedSessions.values().iterator();
+        while (userSessions.hasNext()) {
+            UserSession session = userSessions.next();
+            if (session.getUser().equals(forUser)) {
+                session.setCurrentGameData(gameData);
+            }
+        }
     }
 
     @Override

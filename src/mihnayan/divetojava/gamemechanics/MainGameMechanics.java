@@ -1,12 +1,15 @@
 package mihnayan.divetojava.gamemechanics;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
+import mihnayan.divetojava.base.GameData;
 import mihnayan.divetojava.base.GameMechanics;
 import mihnayan.divetojava.base.GameState;
 import mihnayan.divetojava.base.MessageService;
@@ -32,6 +35,28 @@ public class MainGameMechanics implements GameMechanics, Runnable {
     private Frontend frontend;
     private int minPlayersCount;
     private int maxPlayersCount;
+    
+    private class GameDataImpl implements GameData {
+
+        private User player;
+        private long elapsedTime = 0L;
+        private List<User> opponents = new ArrayList<>();
+
+        @Override
+        public long getElapsedTime() {
+            return elapsedTime;
+        }
+
+        @Override
+        public User getPlayer() {
+            return player;
+        }
+
+        @Override
+        public List<User> getOpponents() {
+            return opponents;
+        }
+    }
 
     /**
      * Creates MainGameMechanics object.
@@ -63,7 +88,6 @@ public class MainGameMechanics implements GameMechanics, Runnable {
         while (true) {
             try {
                 ms.execForAbonent(this);
-                sendGameData();
                 Thread.sleep(SLEEP_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -94,14 +118,26 @@ public class MainGameMechanics implements GameMechanics, Runnable {
         }
     }
 
-    private void sendGameData() {
-        if (gameSession == null) {
-            return;
-        }
-        GameDataImpl gd = new GameDataImpl(gameSession);
-        MsgSetGameData msg = new MsgSetGameData(address, frontend.getAddress(),
-                gd);
+    @Override
+    public void requestGameData(User forUser) {
+        GameData gd = buildGameData(forUser);
+        MsgSetGameData msg = new MsgSetGameData(address, frontend.getAddress(), gd, forUser);
         ms.sendMessage(msg);
     }
 
+    private GameData buildGameData(User player) {
+        GameDataImpl gd = new GameDataImpl();
+        gd.player = player;
+        if (gameSession.getGameState() != GameState.GAMEPLAY) return gd;
+
+        gd.elapsedTime = (new Date()).getTime() - gameSession.getStartTime();
+        
+        for (User opponent : gameSession.getPlayers()) {
+            if (!opponent.equals(player)) {
+                gd.opponents.add(opponent);
+            }
+        }
+        
+        return gd;
+    }
 }

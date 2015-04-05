@@ -15,4 +15,6 @@ public interface GameMechanics extends Abonent {
      * @param players The set of users that are in the game.
      */
     void startGameSession(Set<User> players);
+    
+    void requestGameData(User forUser);
 }

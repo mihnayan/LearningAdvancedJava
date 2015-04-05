@@ -21,7 +21,7 @@ public class MsgStartGameSession extends MsgToGM {
      * @param to Address of recipient (concrete GameMechanics implementation).
      * @param players Set of players.
      */
-    public MsgStartGameSession(Address from, Address to, Set<User> players) {
+    MsgStartGameSession(Address from, Address to, Set<User> players) {
         super(from, to);
         this.players = players;
     }

@@ -9,7 +9,6 @@ import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
-import mihnayan.divetojava.frontend.AuthState;
 
 /**
  * Class which authenticates a specific user for a specific session.
@@ -28,8 +27,6 @@ public class AccountServer implements Runnable, AccountService {
     private MessageService ms;
     private Address address;
     private Frontend frontend;
-    
-    private HashMap<UserId, User> users = new HashMap<>();
 
     private static HashMap<String, UserId> userDb = new HashMap<String, UserId>();
     static {

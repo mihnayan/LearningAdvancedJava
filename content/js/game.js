@@ -22,8 +22,8 @@ var getFormatedTime = function (ms) {
 var processGame = new function () {
 
     var self = this;
-    var isWasLogged;
-    var isGameWasStarted;
+    var wasLogged;
+    var wasStartedGame;
 
     var requestGameData = function (callback) {
         $.ajax({
@@ -45,26 +45,26 @@ var processGame = new function () {
 
         var isLogged = data.loginStatus === 'LOGGED';
 
-        if (isWasLogged !== isLogged) {
+        if (wasLogged !== isLogged) {
             if (isLogged) {
                 if (typeof self.onlogin === 'function') self.onlogin(data.player);
             } else {
                 if (typeof self.onlogout === 'function') self.onlogout();
             }
-            isWasLogged = isLogged;
+            wasLogged = isLogged;
         }
 
         if (isLogged) {
 
             var isGameStarted = data.gameData !== null;
 
-            if (isGameWasStarted !== isGameStarted) {
+            if (wasStartedGame !== isGameStarted) {
                 if (isGameStarted) {
-                    if (typeof self.ongamestart === 'function') self.ongamestart(data.opponent);
+                    if (typeof self.ongamestart === 'function') self.ongamestart();
                 } else {
                     if (typeof self.ongameend === 'function') self.ongameend();
                 }
-                isGameWasStarted = isGameStarted;
+                wasStartedGame = isGameStarted;
             }
 
             if (isGameStarted) {
@@ -83,7 +83,7 @@ var processGame = new function () {
 
     this.onlogin = function (player) {};
 
-    this.ongamestart = function (opponent) {};
+    this.ongamestart = function () {};
 
     this.ongameend = function () {};
 
@@ -108,14 +108,34 @@ var processGame = new function () {
         $('#player-id').text(player.userId);
     };
 
-    processGame.ongamestart = function (opponent) {
+    processGame.ongamestart = function () {
         hideAlert();
-        $('#opponent-name').text(opponent.userName);
     }
 
     processGame.ongamedata = function (gameData) {
         $('#elapsed-time').text(getFormatedTime(gameData.elapsedTime));
+        console.log(gameData);
+        var opps = gameData.opponents;
+        console.log(opps);
+
+        $('div#opponents').html(createOpponentList(opps));
     }
 
     processGame.start();
 });
+
+ function createOpponentList(opponentArray) {
+    var frag = document.createDocumentFragment();
+    var list = document.createElement('ul');
+    
+    if (Object.prototype.toString.call(opponentArray) === '[object Array]') {
+        for (var i = 0; i < opponentArray.length; i++) {
+            var item = document.createElement('li');
+            item.innerHTML = opponentArray[i];
+            list.appendChild(item);
+        }
+    }
+
+    frag.appendChild(list);
+    return frag;
+ }

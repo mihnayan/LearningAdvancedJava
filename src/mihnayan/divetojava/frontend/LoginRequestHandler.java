@@ -1,9 +1,7 @@
 package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -14,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import mihnayan.divetojava.accountsrv.AccountServer;
-import mihnayan.divetojava.base.Abonent;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.MessageService;
@@ -27,7 +24,7 @@ import mihnayan.divetojava.base.UserSession;
  * @author Mikhail Mangushev (Mihnayan)
  *
  */
-public class LoginRequestHandler extends AbstractRequestHandler {
+class LoginRequestHandler extends AbstractRequestHandler {
 
     private static Logger log = Logger.getLogger(LoginRequestHandler.class.getName());
     
@@ -127,7 +124,7 @@ public class LoginRequestHandler extends AbstractRequestHandler {
     }
 
     @Override
-    public void handleRequest(HttpServletResponse response) {
+    public void buildResponse(HttpServletResponse response) {
 
         if (loginStatus == AuthState.NEW && currentUserName != null) {
             registerSession(processedSession, currentUserName);

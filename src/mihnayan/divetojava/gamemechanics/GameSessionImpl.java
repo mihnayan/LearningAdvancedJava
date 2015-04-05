@@ -7,7 +7,6 @@ import java.util.Set;
 import mihnayan.divetojava.base.GameSession;
 import mihnayan.divetojava.base.GameState;
 import mihnayan.divetojava.base.User;
-import mihnayan.divetojava.base.UserId;
 
 /**
  * The class describing the game session.

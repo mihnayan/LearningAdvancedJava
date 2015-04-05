@@ -14,5 +14,7 @@ public interface GameData {
      */
     long getElapsedTime();
     
-    List<User> getOpponents(User player);
+    User getPlayer();
+    
+    List<User> getOpponents();
 }

@@ -9,7 +9,7 @@ import mihnayan.divetojava.base.Frontend;
  * Abstract class that provides the interface of request processing.
  * @author Mikhail Mangushev (Mihnayan)
  */
-public abstract class AbstractRequestHandler {
+abstract class AbstractRequestHandler {
 
     protected HttpServletRequest request;
     protected Frontend frontend;
@@ -25,10 +25,10 @@ public abstract class AbstractRequestHandler {
     }
 
     /**
-     * Starts handling of request.
+     * Builds and sends the response to client.
      * @param response HttpServletResponse object to write data sent to the client.
      */
-    public abstract void handleRequest(HttpServletResponse response);
+    public abstract void buildResponse(HttpServletResponse response);
 
     /**
      * Returns request handling result as a JSON.

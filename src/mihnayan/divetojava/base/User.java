@@ -5,7 +5,7 @@ package mihnayan.divetojava.base;
  * Represents a single entry in the table 'USER'.
  * @author Mikhail Mangushev (Mihnayan)
  */
-public class User {
+public final class User {
 
     private UserId id;
     private String username;
