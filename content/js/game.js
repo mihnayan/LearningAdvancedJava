@@ -42,7 +42,7 @@ var processGame = new function () {
     };
 
     var handleGameData = function (data) {
-
+        console.log(data);
         var isLogged = data.loginStatus === 'LOGGED';
 
         if (wasLogged !== isLogged) {
@@ -56,7 +56,7 @@ var processGame = new function () {
 
         if (isLogged) {
 
-            var isGameStarted = data.gameData !== null;
+            var isGameStarted = data.gameState === 'GAMEPLAY';
 
             if (wasStartedGame !== isGameStarted) {
                 if (isGameStarted) {

@@ -63,7 +63,7 @@ public class UserDAO {
         return Executor.execQuery(stmt, resultHandler);
     }
     
-    public List<User> getList() throws SQLException {
+    public List<User> getUsers() throws SQLException {
         String sql = String.format(SELECT_QUERY_PATTERN, "*", TABLE);
         PreparedStatement stmt = con.prepareStatement(sql);
         

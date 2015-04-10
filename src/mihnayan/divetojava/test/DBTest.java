@@ -87,7 +87,7 @@ public final class DBTest {
 
             //Select and handle data
             System.out.println("\n List of users: ");
-            List<User> users = dao.getList();
+            List<User> users = dao.getUsers();
             for (User user : users) {
                 printUser(user);
             }

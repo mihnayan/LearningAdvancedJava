@@ -37,6 +37,7 @@ public final class UserSession {
     }
     
     public synchronized GameData getCurrentGameData() {
+        //TODO: return clone of currentGameData object
         return currentGameData;
     }
 }

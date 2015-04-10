@@ -27,11 +27,10 @@ class GameDataRequestHandler extends AbstractRequestHandler {
     private static Logger log = Logger.getLogger(GameDataRequestHandler.class
             .getName());
 
-    public static volatile GameState gameState = GameState.WAITING_FOR_QUORUM;
-
-    private String sessionId;
-    private User user;
+    private UserSession session;
     private AuthState loginStatus = AuthState.FAILED;
+    private GameState gameState = GameState.WAITING_FOR_QUORUM;  
+    private GameData gameData;
     
     private final MessageService ms;
     private final Address gameMechanicsAddress;
@@ -48,22 +47,23 @@ class GameDataRequestHandler extends AbstractRequestHandler {
         ms = frontend.getMessageService();
         gameMechanicsAddress = ms.getAddressService().getAddress(MainGameMechanics.class);
         
-        sessionId = request.getSession().getId();
-        UserSession session = LoginRequestHandler.getAuthenticatedSession(sessionId);
+        String sessionId = request.getSession().getId();
+        session = LoginRequestHandler.getAuthenticatedSession(sessionId);
         if (session == null) {
             return;
         }
 
         loginStatus = AuthState.LOGGED;
-        user = session.getUser();
 
         if (gameState != GameState.GAMEPLAY) {
             startGame();
         }
         
         if (gameState == GameState.GAMEPLAY) {
+            gameData = session.getCurrentGameData();
             ms.sendMessage(
-                    new MsgRequestGameData(frontend.getAddress(), gameMechanicsAddress, user));
+                    new MsgRequestGameData(frontend.getAddress(), gameMechanicsAddress, 
+                            session.getUser()));
         }
     }
 
@@ -89,29 +89,32 @@ class GameDataRequestHandler extends AbstractRequestHandler {
      */
     @Override
     public String toJSON() {
-        return "{" + "\"player\": {" + "\"userName\": "
-                + (user == null ? null : "\"" + user.getUsername() + "\"") + ", "
-                + "\"userId\": \"" + (user == null ? "" : user.getId()) + "\"}, "
+        String userName = "";
+        String userId = "";
+        if (session != null) {
+            userName = session.getUser().getUsername();
+            userId = session.getUser().getId().toString();
+        }
+        return "{" + "\"player\": {" + "\"userName\": \"" + userName + "\", "
+                + "\"userId\": \"" + userId + "\"}, "
                 + "\"gameState\": \"" + gameState + "\","
                 + "\"loginStatus\": \"" + loginStatus + "\","
                 + "\"gameData\": " + gameDataToJSON() + "}";
     }
 
     private String gameDataToJSON() {
-        GameData gameData = 
-                LoginRequestHandler.authenticatedSessions.get(sessionId).getCurrentGameData();
-        if (gameData == null) {
-            return null;
-        }
         StringBuilder json = new StringBuilder("{");
-        json.append("\"elapsedTime\": ").append(gameData.getElapsedTime()).append(", ");
-        json.append("\"opponents\": [");
         
-        for (User user : gameData.getOpponents()) {
-            json.append("\"").append(user.getUsername()).append("\"");
+        if (gameData != null) {
+            json.append("\"elapsedTime\": ").append(gameData.getElapsedTime()).append(", ");
+            json.append("\"opponents\": [");
+            for (User user : gameData.getOpponents()) {
+                json.append("\"").append(user.getUsername()).append("\"");
+            }
+            json.append("]");
+        } else {
+            json.append("");
         }
-        
-        json.append("]");
         json.append("}");
 
         return json.toString();
@@ -129,7 +132,7 @@ class GameDataRequestHandler extends AbstractRequestHandler {
         
         ms.sendMessage(
                 new MsgStartGameSession(frontend.getAddress(), gameMechanicsAddress, players));
-        GameDataRequestHandler.gameState = GameState.GAMEPLAY;
+        gameState = GameState.GAMEPLAY;
         log.info("Start game message was sent");
     }
 

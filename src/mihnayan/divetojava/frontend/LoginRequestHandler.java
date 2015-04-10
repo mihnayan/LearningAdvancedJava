@@ -28,19 +28,21 @@ class LoginRequestHandler extends AbstractRequestHandler {
 
     private static Logger log = Logger.getLogger(LoginRequestHandler.class.getName());
     
-    public static ConcurrentHashMap<String, UserSession> authenticatedSessions =
+    public static final ConcurrentHashMap<String, UserSession> SESSIONS =
             new ConcurrentHashMap<>();
-
-    private String processedSessionId;
-    private String currentUserName;
-    private UserId currentUserId = null;
-    private AuthState loginStatus;
-    private String statusText;
-
-    private HttpSession processedSession;
 
     // field for user name in html form
     private static final String FRM_USER_NAME = "user-name";
+    
+    // HttpSession attribute names 
+    private static final String AUTHSTATE_ATTR = "authState";
+    private static final String USERNAME_ATTR = "userName";
+    
+    private String sessionId;
+    private String userName;
+    private UserId userId;
+    private AuthState loginStatus;
+    private String statusText;
 
     /**
      * Creates LoginRequestHandler object.
@@ -50,91 +52,92 @@ class LoginRequestHandler extends AbstractRequestHandler {
      */
     public LoginRequestHandler(HttpServletRequest request, Frontend frontend) {
         super(request, frontend);
-        processedSession = request.getSession();
-
-        processedSessionId = processedSession.getId();
         
-        // new
-        UserSession userSession = authenticatedSessions.get(processedSessionId);
-        if (userSession != null) {
-             currentUserName = userSession.getUser().getUsername();
-             currentUserId = userSession.getUser().getId();
-        } else {
-            currentUserName = (String) processedSession.getAttribute("userName");
-            if (currentUserName == null) {
-                currentUserName = request.getParameter(FRM_USER_NAME);
+        HttpSession httpSession = request.getSession();
+        sessionId = httpSession.getId();
+        userName = (String) httpSession.getAttribute(USERNAME_ATTR);
+        loginStatus = getAuthState(httpSession);
+
+        switch (loginStatus) {
+        case NEW:
+            if (userName == null) {
+                userName = request.getParameter(FRM_USER_NAME);
             }
+            if (userName != null) {
+                UserSession session = new UserSession(httpSession);
+                httpSession.setAttribute(USERNAME_ATTR, userName);
+                loginStatus = AuthState.WAITING;
+                saveAuthState(httpSession, loginStatus);
+                authenticateUserSession(session, userName);
+            }
+            break;
+            
+        case WAITING:
+            break;
+            
+        case LOGGED:
+            UserSession session = SESSIONS.get(sessionId);
+            userId = session.getUser().getId();
+            loginStatus = AuthState.LOGGED;
+            break;
+            
+        case FAILED:
+            httpSession.removeAttribute(USERNAME_ATTR);
+            saveAuthState(httpSession, AuthState.NEW);
+            break;
         }
-        
-//        currentUserName = (String) processedSession.getAttribute("userName");
-//        if (currentUserName == null) {
-//            currentUserName = request.getParameter(FRM_USER_NAME);
-//        }
-//        currentUserId = (UserId) processedSession.getAttribute("userId");
-        loginStatus = getAuthState(processedSession);
     }
-
-    /**
-     * Sets authentication status for session.
-     * @param session The session for which status must be set.
-     * @param authState The status which must be set.
-     */
-    public static void setAuthState(HttpSession session, AuthState authState) {
-        session.setAttribute("authState", authState);
-    }
-
-    /**
-     * Returns authentication status for session. if the session has no authentication status,
-     * the status is set to the AuthState.NEW.
-     * @param session The session status of which should be returned.
-     * @return One of values of AuthState.
-     */
-    public static AuthState getAuthState(HttpSession session) {
-        if (session.getAttribute("authState") == null || session.isNew()) {
-            setAuthState(session, AuthState.NEW);
+    
+    static AuthState getAuthState(HttpSession httpSession) {
+        if (SESSIONS.containsKey(httpSession.getId())) {
+            return AuthState.LOGGED;
         }
-        return (AuthState) session.getAttribute("authState");
+        AuthState authState = (AuthState) httpSession.getAttribute(AUTHSTATE_ATTR);
+        if (authState == null) {
+            authState = AuthState.NEW;
+        }
+        return authState;
     }
 
     /**
      * Returns registered session by it session Id.
      * @param sessionId Session Id for session that must be returned.
-     * @return HttpSession object.
+     * @return UserSession object.
      */
-    public static UserSession getAuthenticatedSession(String sessionId) {
-        return authenticatedSessions.get(sessionId);
+    static UserSession getAuthenticatedSession(String sessionId) {
+        return SESSIONS.get(sessionId);
     }
 
-
-    public static void setUser(UserSession userSession) {
+    static void setUser(UserSession userSession) {
         if (userSession.getUser() != null) {
-            setAuthState(userSession.getHttpSession(), AuthState.LOGGED);
-            authenticatedSessions.put(userSession.getId(), userSession);
+            saveAuthState(userSession.getHttpSession(), AuthState.LOGGED);
+            SESSIONS.put(userSession.getId(), userSession);
         } else {
-            setAuthState(userSession.getHttpSession(), AuthState.FAILED);
+            saveAuthState(userSession.getHttpSession(), AuthState.FAILED);
         }
     }
     
-    public static Set<User> getAuthenticatedUsers() {
+    static Set<User> getAuthenticatedUsers() {
         Set<User> users = new HashSet<>();
-        for (UserSession userSession : authenticatedSessions.values()) {
+        for (UserSession userSession : SESSIONS.values()) {
             users.add(userSession.getUser());
         }
         return users;
     }
+    
+    private static void saveAuthState(HttpSession session, AuthState authState) {
+        session.setAttribute(AUTHSTATE_ATTR, authState);
+    }
+    
+    private void authenticateUserSession(UserSession userSession, String userName) {
+        MessageService ms = frontend.getMessageService();
+        Address to = ms.getAddressService().getAddress(AccountServer.class);
+        ms.sendMessage(
+                new MsgAuthenticateUserSession(frontend.getAddress(), to, userSession, userName));
+    }
 
     @Override
     public void buildResponse(HttpServletResponse response) {
-
-        if (loginStatus == AuthState.NEW && currentUserName != null) {
-            registerSession(processedSession, currentUserName);
-            loginStatus = getAuthState(processedSession);
-        }
-
-        if (loginStatus == AuthState.FAILED) {
-            unregisterSession(processedSession);
-        }
-
         response.setContentType("application/json;charset=utf-8");
         response.setStatus(HttpServletResponse.SC_OK);
         try {
@@ -159,32 +162,12 @@ class LoginRequestHandler extends AbstractRequestHandler {
     @Override
     public String toJSON() {
         return "{"
-                + "\"sessionId\": \"" + processedSessionId + "\", "
-                + "\"userName\": \"" + (currentUserName == null ? "" : currentUserName) + "\", "
-                + "\"userId\": \"" + (currentUserId == null ? "" : currentUserId) + "\", "
+                + "\"sessionId\": \"" + sessionId + "\", "
+                + "\"userName\": \"" + (userName == null ? "" : userName) + "\", "
+                + "\"userId\": \"" + (userId == null ? "" : userId) + "\", "
                 + "\"loginStatus\": \"" + loginStatus + "\", "
                 + "\"text\": \"" + statusText + "\""
                 + "}";
-    }
-
-    private void registerSession(HttpSession session, String username) {
-        
-        UserSession userSession = new UserSession(session);
-
-        session.setAttribute("userName", username);
-        setAuthState(session, AuthState.WAITING);
-
-        MessageService ms = frontend.getMessageService();
-        Address to = ms.getAddressService().getAddress(AccountServer.class);
-        
-        ms.sendMessage(
-                new MsgAuthenticateUserSession(frontend.getAddress(), to, userSession, username));
-    }
-
-    private void unregisterSession(HttpSession session) {
-        setAuthState(session, AuthState.NEW);
-        session.removeAttribute("userName");
-//        sessions.remove(session.getId());
     }
 
 }

@@ -138,7 +138,7 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
     @Override
     public void setGameData(GameData gameData, User forUser) {
         Iterator<UserSession> userSessions = 
-                LoginRequestHandler.authenticatedSessions.values().iterator();
+                LoginRequestHandler.SESSIONS.values().iterator();
         while (userSessions.hasNext()) {
             UserSession session = userSessions.next();
             if (session.getUser().equals(forUser)) {
