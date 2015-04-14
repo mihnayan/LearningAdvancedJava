@@ -27,8 +27,10 @@ public class MainDatabaseService implements DatabaseService, Runnable {
 
     private MessageService ms;
     private Address address;
-    private DBConnectionResource connectionResource;
-    private Connection connection;
+    
+    private String dbConnectionString;
+    private String dbUser;
+    private String dbUserPassword;
 
     /**
      * @param ms Real message system for interaction with other components.
@@ -36,9 +38,13 @@ public class MainDatabaseService implements DatabaseService, Runnable {
      */
     public MainDatabaseService(MessageService ms) throws CreateServiceException {
         try {
-            connectionResource = (DBConnectionResource)
+            DBConnectionResource connectionResource = (DBConnectionResource)
                     ResourceFactory.instance().get(DBConnectionResource.class);
             Class.forName(connectionResource.getDriverClass());
+            
+            dbConnectionString = connectionResource.getConnectionString();
+            dbUser = connectionResource.getUserName();
+            dbUserPassword = connectionResource.getPassword();
         } catch (ClassNotFoundException | ResourceNotExistException e) {
             throw new CreateServiceException(e);
         }
@@ -48,13 +54,6 @@ public class MainDatabaseService implements DatabaseService, Runnable {
 
     @Override
     public void run() {
-        
-        try {
-            openConnection();
-        } catch (SQLException e) {
-            log.log(Level.WARNING, e.getMessage());
-        }
-
         while (true) {
             try {
                 ms.execForAbonent(this);
@@ -77,19 +76,12 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     
     @Override
     public User getUser(String username) {
-        try {
-            openConnection();
-            return (new UserDAO(connection)).getByUsername(username);
+        try (Connection conn = 
+                DriverManager.getConnection(dbConnectionString, dbUser, dbUserPassword)) {
+            return UserDAO.getByUsername(conn, username);
         } catch (SQLException e) {
             log.log(Level.WARNING, e.getMessage());
             return null;
-        }
-    }
-    
-    private void openConnection() throws SQLException {
-        if (connection == null) {
-            connection = DriverManager.getConnection(connectionResource.getConnectionString(),
-                    connectionResource.getUserName(), connectionResource.getPassword());
         }
     }
 

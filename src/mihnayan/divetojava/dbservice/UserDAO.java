@@ -12,8 +12,6 @@ import mihnayan.divetojava.base.UserId;
 
 public class UserDAO {
     
-    private final Connection con;
-    
     private final static String TABLE = "user";
     private final static String P_KEY = "id";
     private final static String FIELD_USERNAME = "username";
@@ -41,31 +39,27 @@ public class UserDAO {
             return dataSet;
         }
     };
-
-    public UserDAO(Connection con) {
-        this.con = con;
-    }
     
-    public User get(UserId id) throws SQLException {
+    public static User get(Connection conn, UserId id) throws SQLException {
         String sql = String.format(SELECT_QUERY_PATTERN + " where %s=?", "*", TABLE, P_KEY);
-        PreparedStatement stmt = con.prepareStatement(sql);
+        PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setString(1, id.toString());
         
         return Executor.execQuery(stmt, resultHandler);
     }
     
-    public User getByUsername(String username) throws SQLException {
+    public static User getByUsername(Connection conn, String username) throws SQLException {
         String sql = String.format(SELECT_QUERY_PATTERN
                 + " where %s=?", "*", TABLE, FIELD_USERNAME);
-        PreparedStatement stmt = con.prepareStatement(sql);
+        PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setString(1, username);
         
         return Executor.execQuery(stmt, resultHandler);
     }
     
-    public List<User> getUsers() throws SQLException {
+    public static List<User> getUsers(Connection conn) throws SQLException {
         String sql = String.format(SELECT_QUERY_PATTERN, "*", TABLE);
-        PreparedStatement stmt = con.prepareStatement(sql);
+        PreparedStatement stmt = conn.prepareStatement(sql);
         
         return Executor.execQuery(stmt, new ResultHandler<List<User>>() {
             public List<User> handle(ResultSet resultSet) throws SQLException {
@@ -82,18 +76,22 @@ public class UserDAO {
         });
     }
     
-    public void add(User dataSet) throws SQLException {
-        PreparedStatement stmt = con.prepareStatement(ADD_QUERY_PATTERN);
+    public static void add(Connection conn, User dataSet) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement(ADD_QUERY_PATTERN);
         stmt.setString(1, dataSet.getUsername());
         stmt.setString(2, dataSet.getFullName());
         stmt.executeUpdate();
     }
 
-    public void delete(UserId id) throws SQLException {
+    public static void delete(Connection conn, UserId id) throws SQLException {
         String sql = String.format(DELETE_QUERY_PATTERN, P_KEY);
-        PreparedStatement stmt = con.prepareStatement(sql);
+        PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setString(1, id.toString());
         
         stmt.execute();
+    }
+    
+    private UserDAO() {
+        throw new AssertionError();
     }
 }

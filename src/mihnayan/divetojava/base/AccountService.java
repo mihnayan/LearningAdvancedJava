@@ -6,13 +6,6 @@ package mihnayan.divetojava.base;
  *
  */
 public interface AccountService extends Abonent {
-
-    /**
-     * Returns user Id by it username.
-     * @param userName The username
-     * @return UserId object
-     */
-//    UserId getUserId(String userName);
     
     void authenticateUserSession(UserSession session, String userName);
 }

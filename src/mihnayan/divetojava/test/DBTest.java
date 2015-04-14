@@ -46,8 +46,9 @@ public final class DBTest {
     public static final int COL_FULL_NAME = 3;
 
     public static void printUser(User user) {
-        System.out.println(user.getId() + ", " + user.getUsername() + " ("
+        System.out.println(user + " ("
                 + user.getFullName() + ")");
+        System.out.println("hashCode: " + user.hashCode() + "\n");
     }
     
     /**
@@ -71,34 +72,33 @@ public final class DBTest {
             System.out.println(Executor.execCommand(con, CREATE_TRIGGER));
 
             //Insert data
-            UserDAO dao = new UserDAO(con);
             
             User dataSet = new User("jbond");
             dataSet.setFullName("James Bond");
-            dao.add(dataSet);
+            UserDAO.add(con, dataSet);
             
             dataSet = new User("fgump");
             dataSet.setFullName("Forest Gump");
-            dao.add(dataSet);
+            UserDAO.add(con, dataSet);
             
             dataSet = new User("sman");
             dataSet.setFullName("superman");
-            dao.add(dataSet);
+            UserDAO.add(con, dataSet);
 
             //Select and handle data
             System.out.println("\n List of users: ");
-            List<User> users = dao.getUsers();
+            List<User> users = UserDAO.getUsers(con);
             for (User user : users) {
                 printUser(user);
             }
             
             System.out.println("\n jbond by username: ");
-            User bond = dao.getByUsername("jbond");
+            User bond = UserDAO.getByUsername(con, "jbond");
             printUser(bond);
             
             System.out.println("\n jbond by id: ");
             UserId bondId = bond.getId();
-            printUser(dao.get(bondId));
+            printUser(UserDAO.get(con, bondId));
             
         } catch (SQLException e) {
             e.printStackTrace();
