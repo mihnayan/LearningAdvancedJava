@@ -75,14 +75,22 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     }
     
     @Override
-    public User getUser(String username) {
+    public void requestUserByName(String username) {
+        User user = null;
         try (Connection conn = 
                 DriverManager.getConnection(dbConnectionString, dbUser, dbUserPassword)) {
-            return UserDAO.getByUsername(conn, username);
-        } catch (SQLException e) {
-            log.log(Level.WARNING, e.getMessage());
-            return null;
+            try {
+                user =  UserDAO.getByUsername(conn, username);
+            } catch (SQLException e) {
+                log.warning("An error occurred when trying to retrieve user from database");
+                log.warning(e.getMessage());
+            }
+        } catch (SQLException er) {
+            log.warning("Database connection error");
+            log.warning(er.getMessage());
         }
+        
+        //TODO: send back message
     }
 
 }

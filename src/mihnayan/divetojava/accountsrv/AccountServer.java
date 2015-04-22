@@ -1,6 +1,11 @@
 package mihnayan.divetojava.accountsrv;
 
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.NavigableSet;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import mihnayan.divetojava.base.AccountService;
 import mihnayan.divetojava.base.Address;
@@ -20,13 +25,52 @@ import mihnayan.divetojava.base.UserSession;
  * @author Mikhail Mangushev
  *
  */
-public class AccountServer implements Runnable, AccountService {
+public final class AccountServer implements Runnable, AccountService {
 
     private static final int SLEEP_TIME = 5000;
+    private static final long LOGIN_TIMEOUT = 30000;
 
     private MessageService ms;
     private Address address;
     private Frontend frontend;
+    
+    private static final class AuthData implements Comparable<AuthData> {
+        private final UserSession session;
+        private final String username;
+        private final Long beginTimestamp;
+        
+        AuthData(UserSession session, String username) {
+            this.session = session;
+            this.username = username;
+            this.beginTimestamp = (new Date()).getTime();
+        }
+
+        @Override
+        public int compareTo(AuthData o) {
+            return beginTimestamp.compareTo(o.beginTimestamp);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof AuthData)) return false;
+            AuthData ad = (AuthData) obj;
+            return username.equals(ad.username) && 
+                    session.equals(ad.session) && 
+                    beginTimestamp.equals(ad.beginTimestamp);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = 17;
+            result = 31 * result + session.hashCode();
+            result = 31 * result + username.hashCode();
+            result = 31 * result + (int) (beginTimestamp ^ (beginTimestamp >>> 32));
+            return result;
+        }
+        
+        
+    }
 
     private static HashMap<String, UserId> userDb = new HashMap<String, UserId>();
     static {
@@ -37,6 +81,8 @@ public class AccountServer implements Runnable, AccountService {
         userDb.put("Mace Windu", new UserId(Integer.toString(++idCount)));
         userDb.put("Obi-Wan Kenobi", new UserId(Integer.toString(++idCount)));
     }
+    
+    private final NavigableSet<AuthData> pendingAuth = new TreeSet<>();
 
     /**
      * @param ms Real message system for interaction with other components.
@@ -77,6 +123,13 @@ public class AccountServer implements Runnable, AccountService {
         MsgSetAuthenticatedUserSession msg =
                 new MsgSetAuthenticatedUserSession(address, frontend.getAddress(), session);
         ms.sendMessage(msg);
+        
+        //XXX: new functionality
+        pendingAuth.add(new AuthData(session, userName));
+        for (AuthData ad : pendingAuth) {
+            System.out.println(ad.username + " : " + ad.beginTimestamp);
+        }
+        System.out.println();
     }
 
     @Override
@@ -86,8 +139,22 @@ public class AccountServer implements Runnable, AccountService {
                 // emulation of a long process
                 Thread.sleep(SLEEP_TIME);
                 ms.execForAbonent(this);
+                deleteExpired();
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+    
+    private void deleteExpired() {
+        long now = (new Date()).getTime();
+        boolean hasExpired = true;
+        
+        while (!pendingAuth.isEmpty() && hasExpired) {
+            hasExpired = now - pendingAuth.first().beginTimestamp > LOGIN_TIMEOUT;
+            if (hasExpired) {
+                AuthData ad = pendingAuth.pollFirst();
+                System.out.println("\n deleted: " + ad.username + "\n");
             }
         }
     }
