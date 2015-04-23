@@ -2,9 +2,7 @@ package mihnayan.divetojava.accountsrv;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.NavigableSet;
-import java.util.SortedSet;
 import java.util.TreeSet;
 
 import mihnayan.divetojava.base.AccountService;
@@ -14,6 +12,7 @@ import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
+import mihnayan.divetojava.dbservice.MainDatabaseService;
 
 /**
  * Class which authenticates a specific user for a specific session.
@@ -115,23 +114,38 @@ public final class AccountServer implements Runnable, AccountService {
     
     @Override
     public void authenticateUserSession(UserSession session, String userName) {
-        UserId userId = userDb.get(userName);
-        if (userId != null) {
-            User user = new User(userId, userName);
-            session.setUser(user);
-        }
-        MsgSetAuthenticatedUserSession msg =
-                new MsgSetAuthenticatedUserSession(address, frontend.getAddress(), session);
-        ms.sendMessage(msg);
+//        UserId userId = userDb.get(userName);
+//        if (userId != null) {
+//            User user = new User(userId, userName);
+//            session.setUser(user);
+//        }
+//        MsgSetAuthenticatedUserSession msg =
+//                new MsgSetAuthenticatedUserSession(address, frontend.getAddress(), session);
+//        ms.sendMessage(msg);
         
-        //XXX: new functionality
         pendingAuth.add(new AuthData(session, userName));
-        for (AuthData ad : pendingAuth) {
-            System.out.println(ad.username + " : " + ad.beginTimestamp);
-        }
-        System.out.println();
+        MsgRequestUser msg =
+                new MsgRequestUser(address, 
+                        ms.getAddressService().getAddress(MainDatabaseService.class), userName);
+        ms.sendMessage(msg);
+        System.out.println("Sending message to DB. Username: " + userName);
     }
-
+    
+    @Override
+    public void setAuthenticatedUser(String username, User user, String resultText) {
+       for (AuthData ad : pendingAuth) {
+           if (ad.username == username) {
+               UserSession session = ad.session;
+               session.setUser(user);
+               pendingAuth.remove(ad);
+               
+               MsgSetAuthenticatedUserSession msg = new MsgSetAuthenticatedUserSession(address,
+                       frontend.getAddress(), session);
+               ms.sendMessage(msg);
+           }
+       }
+    }
+    
     @Override
     public void run() {
         while (true) {
@@ -139,7 +153,7 @@ public final class AccountServer implements Runnable, AccountService {
                 // emulation of a long process
                 Thread.sleep(SLEEP_TIME);
                 ms.execForAbonent(this);
-                deleteExpired();
+//                deleteExpired();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -158,4 +172,6 @@ public final class AccountServer implements Runnable, AccountService {
             }
         }
     }
+    
+//    private void sendLoginMessage(User)
 }

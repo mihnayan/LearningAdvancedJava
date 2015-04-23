@@ -3,9 +3,9 @@ package mihnayan.divetojava.dbservice;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import mihnayan.divetojava.accountsrv.AccountServer;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.CreateServiceException;
 import mihnayan.divetojava.base.DatabaseService;
@@ -50,6 +50,7 @@ public class MainDatabaseService implements DatabaseService, Runnable {
         }
         this.ms = ms;
         address = new Address();
+        ms.getAddressService().setAddress(this);
     }
 
     @Override
@@ -76,21 +77,27 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     
     @Override
     public void requestUserByName(String username) {
+        System.out.println("Received message in DB. Username: " + username);
         User user = null;
+        String resultText = "";
         try (Connection conn = 
                 DriverManager.getConnection(dbConnectionString, dbUser, dbUserPassword)) {
             try {
                 user =  UserDAO.getByUsername(conn, username);
             } catch (SQLException e) {
-                log.warning("An error occurred when trying to retrieve user from database");
+                resultText = "An error occurred when trying to retrieve user from database";
+                log.warning(resultText);
                 log.warning(e.getMessage());
             }
         } catch (SQLException er) {
-            log.warning("Database connection error");
+            resultText = "Database connection error";
+            log.warning(resultText);
             log.warning(er.getMessage());
         }
         
-        //TODO: send back message
+        MsgSetAuthenticationResult msg = new MsgSetAuthenticationResult(address,
+                ms.getAddressService().getAddress(AccountServer.class), username, user, resultText);
+        ms.sendMessage(msg);
     }
 
 }

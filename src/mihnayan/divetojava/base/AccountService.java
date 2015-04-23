@@ -8,4 +8,6 @@ package mihnayan.divetojava.base;
 public interface AccountService extends Abonent {
     
     void authenticateUserSession(UserSession session, String userName);
+    
+    void setAuthenticatedUser(String username, User user, String resultText);
 }
