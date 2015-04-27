@@ -131,8 +131,8 @@ public class GameFrontend extends AbstractHandler implements Runnable, Frontend 
     }
 
     @Override
-    public void setAuthenticatedUserSession(UserSession userSession) {
-        LoginRequestHandler.setUser(userSession);
+    public void setAuthenticatedUserSession(UserSession userSession, String resultText) {
+        LoginRequestHandler.setUser(userSession, resultText);
     }
 
     @Override

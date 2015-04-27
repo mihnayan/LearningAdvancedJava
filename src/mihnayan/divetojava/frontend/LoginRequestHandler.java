@@ -18,7 +18,7 @@ import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
-
+//TODO: need to show authentication result and user data on the client side
 /**
  * Helper class that handle requests for user authentication.
  * @author Mikhail Mangushev (Mihnayan)
@@ -35,14 +35,17 @@ class LoginRequestHandler extends AbstractRequestHandler {
     private static final String FRM_USER_NAME = "user-name";
     
     // HttpSession attribute names 
-    private static final String AUTHSTATE_ATTR = "authState";
-    private static final String USERNAME_ATTR = "userName";
+    private static enum SessionAttr {
+        AUTH_STATE,
+        USERNAME,
+        RESULT_TEXT
+    }
     
     private String sessionId;
     private String userName;
     private UserId userId;
     private AuthState loginStatus;
-    private String statusText;
+    private String resultText;
 
     /**
      * Creates LoginRequestHandler object.
@@ -55,8 +58,9 @@ class LoginRequestHandler extends AbstractRequestHandler {
         
         HttpSession httpSession = request.getSession();
         sessionId = httpSession.getId();
-        userName = (String) httpSession.getAttribute(USERNAME_ATTR);
+        userName = (String) httpSession.getAttribute(SessionAttr.USERNAME.toString());
         loginStatus = getAuthState(httpSession);
+        resultText = (String) httpSession.getAttribute(SessionAttr.RESULT_TEXT.toString());
 
         switch (loginStatus) {
         case NEW:
@@ -65,7 +69,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
             }
             if (userName != null) {
                 UserSession session = new UserSession(httpSession);
-                httpSession.setAttribute(USERNAME_ATTR, userName);
+                httpSession.setAttribute(SessionAttr.USERNAME.toString(), userName);
                 loginStatus = AuthState.WAITING;
                 saveAuthState(httpSession, loginStatus);
                 authenticateUserSession(session, userName);
@@ -82,7 +86,8 @@ class LoginRequestHandler extends AbstractRequestHandler {
             break;
             
         case FAILED:
-            httpSession.removeAttribute(USERNAME_ATTR);
+            httpSession.removeAttribute(SessionAttr.USERNAME.toString());
+            httpSession.removeAttribute(SessionAttr.RESULT_TEXT.toString());
             saveAuthState(httpSession, AuthState.NEW);
             break;
         }
@@ -92,7 +97,8 @@ class LoginRequestHandler extends AbstractRequestHandler {
         if (SESSIONS.containsKey(httpSession.getId())) {
             return AuthState.LOGGED;
         }
-        AuthState authState = (AuthState) httpSession.getAttribute(AUTHSTATE_ATTR);
+        AuthState authState =
+                (AuthState) httpSession.getAttribute(SessionAttr.AUTH_STATE.toString());
         if (authState == null) {
             authState = AuthState.NEW;
         }
@@ -108,12 +114,14 @@ class LoginRequestHandler extends AbstractRequestHandler {
         return SESSIONS.get(sessionId);
     }
 
-    static void setUser(UserSession userSession) {
+    static void setUser(UserSession userSession, String resultText) {        
+        HttpSession httpSession = userSession.getHttpSession();
         if (userSession.getUser() != null) {
-            saveAuthState(userSession.getHttpSession(), AuthState.LOGGED);
+            saveAuthState(httpSession, AuthState.LOGGED);
             SESSIONS.put(userSession.getId(), userSession);
         } else {
-            saveAuthState(userSession.getHttpSession(), AuthState.FAILED);
+            saveAuthState(httpSession, AuthState.FAILED);
+            httpSession.setAttribute(SessionAttr.RESULT_TEXT.toString(), resultText);
         }
     }
     
@@ -126,7 +134,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
     }
     
     private static void saveAuthState(HttpSession session, AuthState authState) {
-        session.setAttribute(AUTHSTATE_ATTR, authState);
+        session.setAttribute(SessionAttr.AUTH_STATE.toString(), authState);
     }
     
     private void authenticateUserSession(UserSession userSession, String userName) {
@@ -166,7 +174,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
                 + "\"userName\": \"" + (userName == null ? "" : userName) + "\", "
                 + "\"userId\": \"" + (userId == null ? "" : userId) + "\", "
                 + "\"loginStatus\": \"" + loginStatus + "\", "
-                + "\"text\": \"" + statusText + "\""
+                + "\"text\": \"" + resultText + "\""
                 + "}";
     }
 

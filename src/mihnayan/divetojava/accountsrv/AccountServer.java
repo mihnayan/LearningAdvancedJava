@@ -1,7 +1,6 @@
 package mihnayan.divetojava.accountsrv;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -10,7 +9,6 @@ import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
-import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
 import mihnayan.divetojava.dbservice.MainDatabaseService;
 
@@ -26,8 +24,9 @@ import mihnayan.divetojava.dbservice.MainDatabaseService;
  */
 public final class AccountServer implements Runnable, AccountService {
 
-    private static final int SLEEP_TIME = 5000;
-    private static final long LOGIN_TIMEOUT = 30000;
+    private static final int SLEEP_TIME = 100;
+    private static final int LOGIN_TIMEOUT = 30_000;
+    private static final String TIMEOUT_TEXT = "Timeout authentication has expired";
 
     private MessageService ms;
     private Address address;
@@ -70,16 +69,6 @@ public final class AccountServer implements Runnable, AccountService {
         
         
     }
-
-    private static HashMap<String, UserId> userDb = new HashMap<String, UserId>();
-    static {
-        int idCount = 0;
-        userDb = new HashMap<String, UserId>();
-        userDb.put("Anakin Skywalker", new UserId(Integer.toString(++idCount)));
-        userDb.put("Yoda", new UserId(Integer.toString(++idCount)));
-        userDb.put("Mace Windu", new UserId(Integer.toString(++idCount)));
-        userDb.put("Obi-Wan Kenobi", new UserId(Integer.toString(++idCount)));
-    }
     
     private final NavigableSet<AuthData> pendingAuth = new TreeSet<>();
 
@@ -113,22 +102,15 @@ public final class AccountServer implements Runnable, AccountService {
     }
     
     @Override
-    public void authenticateUserSession(UserSession session, String userName) {
-//        UserId userId = userDb.get(userName);
-//        if (userId != null) {
-//            User user = new User(userId, userName);
-//            session.setUser(user);
-//        }
-//        MsgSetAuthenticatedUserSession msg =
-//                new MsgSetAuthenticatedUserSession(address, frontend.getAddress(), session);
-//        ms.sendMessage(msg);
-        
+    public void authenticateUserSession(UserSession session, String userName) {        
         pendingAuth.add(new AuthData(session, userName));
+        // XXX: for testsing timeout
+        if ("timeoutuser".equals(userName)) return;
+        
         MsgRequestUser msg =
                 new MsgRequestUser(address, 
                         ms.getAddressService().getAddress(MainDatabaseService.class), userName);
         ms.sendMessage(msg);
-        System.out.println("Sending message to DB. Username: " + userName);
     }
     
     @Override
@@ -138,10 +120,7 @@ public final class AccountServer implements Runnable, AccountService {
                UserSession session = ad.session;
                session.setUser(user);
                pendingAuth.remove(ad);
-               
-               MsgSetAuthenticatedUserSession msg = new MsgSetAuthenticatedUserSession(address,
-                       frontend.getAddress(), session);
-               ms.sendMessage(msg);
+               sendMsgToFrontend(session, username, resultText);
            }
        }
     }
@@ -150,10 +129,9 @@ public final class AccountServer implements Runnable, AccountService {
     public void run() {
         while (true) {
             try {
-                // emulation of a long process
                 Thread.sleep(SLEEP_TIME);
                 ms.execForAbonent(this);
-//                deleteExpired();
+                deleteExpired();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -168,10 +146,15 @@ public final class AccountServer implements Runnable, AccountService {
             hasExpired = now - pendingAuth.first().beginTimestamp > LOGIN_TIMEOUT;
             if (hasExpired) {
                 AuthData ad = pendingAuth.pollFirst();
-                System.out.println("\n deleted: " + ad.username + "\n");
+                sendMsgToFrontend(ad.session, ad.username, TIMEOUT_TEXT);
             }
         }
     }
     
-//    private void sendLoginMessage(User)
+    private void sendMsgToFrontend(UserSession session, String userName, String resultText) {
+        MsgSetAuthenticatedUserSession msg = new MsgSetAuthenticatedUserSession(address,
+                frontend.getAddress(), session, resultText);
+        ms.sendMessage(msg);
+    }
+    
 }

@@ -23,7 +23,8 @@ public class MainDatabaseService implements DatabaseService, Runnable {
 
     private static Logger log = Logger.getLogger(MainDatabaseService.class.getName());
 
-    private static final int SLEEP_TIME = 100;
+    // emulation of a long process
+    private static final int SLEEP_TIME = 5000;
 
     private MessageService ms;
     private Address address;
@@ -77,7 +78,6 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     
     @Override
     public void requestUserByName(String username) {
-        System.out.println("Received message in DB. Username: " + username);
         User user = null;
         String resultText = "";
         try (Connection conn = 

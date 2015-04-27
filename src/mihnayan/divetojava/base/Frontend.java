@@ -12,7 +12,7 @@ public interface Frontend extends Abonent {
      * @param userSession User session that contains user data if user was successfully
      * authenticated, or null if authentication was failed.
      */
-    void setAuthenticatedUserSession(UserSession userSession);
+    void setAuthenticatedUserSession(UserSession userSession, String resultText);
 
     /**
      * Sets the current game data.
