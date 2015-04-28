@@ -16,6 +16,7 @@ import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserSession;
 import mihnayan.divetojava.gamemechanics.MainGameMechanics;
+import mihnayan.divetojava.utils.DtjHelper;
 
 /**
  * Helper class that handle requests for the current state of the game.
@@ -82,10 +83,13 @@ class GameDataRequestHandler extends AbstractRequestHandler {
     /**
      * Rules of building user data.
      * User data are json format:<br />
-     * {"player": {<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;"userName": "user name", "userId": 0 }, "opponent": { "userName":
-     * "user name" }, "gameState": GameState, "loginStatus": AuthState,
-     * "gameData": { "elapsedTime": "123456789" } }
+     * { "player": {<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;"userName": "user name",<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;"userId": 0<br />&nbsp;&nbsp;&nbsp;&nbsp;},<br />
+     * "gameState": GameState,<br />
+     * "loginStatus": AuthState,<br />
+     * "gameData": {<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;"elapsedTime": "123456789" } }
      */
     @Override
     public String toJSON() {
@@ -95,10 +99,12 @@ class GameDataRequestHandler extends AbstractRequestHandler {
             userName = session.getUser().getUsername();
             userId = session.getUser().getId().toString();
         }
-        return "{" + "\"player\": {" + "\"userName\": \"" + userName + "\", "
-                + "\"userId\": \"" + userId + "\"}, "
-                + "\"gameState\": \"" + gameState + "\","
-                + "\"loginStatus\": \"" + loginStatus + "\","
+        return "{" 
+                + "\"player\": {" 
+                    + DtjHelper.buildJSONParameter("userName", userName) + ", "
+                    + DtjHelper.buildJSONParameter("userId", userId) + "}, "
+                + DtjHelper.buildJSONParameter("gameState", gameState) + ", "
+                + DtjHelper.buildJSONParameter("loginStatus", loginStatus) + ", "
                 + "\"gameData\": " + gameDataToJSON() + "}";
     }
 

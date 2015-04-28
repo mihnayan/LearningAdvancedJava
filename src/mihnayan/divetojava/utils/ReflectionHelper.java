@@ -65,6 +65,6 @@ public final class ReflectionHelper {
     }
 
     private ReflectionHelper() {
-
+        throw new AssertionError("Can't create helper class");
     }
 }
