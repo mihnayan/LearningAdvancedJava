@@ -30,8 +30,9 @@ var processGame = new function () {
             url: "gameData",
             type: "GET",
             dataType: "json",
-            success: function (json) {
-                callback(json);
+            success: function (data) {
+                console.log(data);
+                callback(data);
             },
             error: function (xhr, status, errorThrown) {
                 console.log("Error: " + errorThrown);
@@ -104,7 +105,7 @@ var processGame = new function () {
     processGame.onlogin = function (player) {
         showAlert('info', 'The game has not yet begun. Please wait for the start of the game.');
 
-        $('#player-name').text(player.userName);
+        $('#player-name').text(player.fullName);
         $('#player-id').text(player.userId);
     };
 

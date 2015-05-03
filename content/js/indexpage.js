@@ -9,8 +9,8 @@ var loginRequest = function (callback) {
 		url: "login",
 		type: "GET",
 		dataType: "json",
-		success: function (json) {
-			callback(json);
+		success: function (data) {
+			callback(data);
 		},
 		error: function (xhr, status, errorThrown) {
 			 console.log("Error: " + errorThrown);
@@ -31,12 +31,15 @@ var showWelcome = function (userData) {
 	console.log(userData);
 	var userId = userData.userId;
 	var userName = userData.userName;
+	var userFullName = userData.fullName;
 	var sessionId = userData.sessionId;
+	var resultText = userData.resultText;
 	
 	$('span#session-id-text').text(sessionId);
 	
 	var showUserLoginInfo = function () {
-		$('span#user-name-text').text(userName);
+		$('span#fullname-text').text(userFullName);
+		$('span#username-text').text(userName);
 		$('span#user-id-text').text(userId);
 		$('#user-login-info p').removeClass('hide');
 		$('#game-link').removeClass('hide');
@@ -55,8 +58,12 @@ var showWelcome = function (userData) {
 			showUserLoginInfo();
 		},
 		'FAILED': function () {
-			showAlert('warning', 'Sorry, you can not be authenticated with username <strong> \"'
-					+ userName + '\"</strong>! '
+			var msg = 'Sorry, you can not be authenticated with username <strong> \"'
+					+ userName + '\"</strong>! ';
+			if (resultText !== '') {
+				msg += "(<strong>Cause:</strong> " + resultText + ") ";
+			}
+			showAlert('warning', msg
 					+ 'You can <a href=\"http://localhost:8080\">try to sign in again</a>');
 		}
 	};

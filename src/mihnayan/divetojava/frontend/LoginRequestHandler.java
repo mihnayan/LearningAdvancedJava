@@ -19,7 +19,7 @@ import mihnayan.divetojava.base.User;
 import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
 import mihnayan.divetojava.utils.DtjHelper;
-//TODO: need to show authentication result and user data on the client side
+
 /**
  * Helper class that handle requests for user authentication.
  * @author Mikhail Mangushev (Mihnayan)
@@ -45,6 +45,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
     private String sessionId;
     private String userName;
     private UserId userId;
+    private String userFullName;
     private AuthState loginStatus;
     private String resultText;
 
@@ -83,6 +84,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
         case LOGGED:
             UserSession session = SESSIONS.get(sessionId);
             userId = session.getUser().getId();
+            userFullName = session.getUser().getFullName();
             loginStatus = AuthState.LOGGED;
             break;
             
@@ -164,6 +166,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
      *     sessionId: 0,
      *     userName: "",
      *     userId: "",
+     *     fullName: "",
      *     loginStatus: AuthState,
      *     text: "some text"
      * }
@@ -174,6 +177,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
                 + DtjHelper.buildJSONParameter("sessionId", sessionId) + ", "
                 + DtjHelper.buildJSONParameter("userName", userName) + ", "
                 + DtjHelper.buildJSONParameter("userId", userId) + ", "
+                + DtjHelper.buildJSONParameter("fullName", userFullName) + ", "
                 + DtjHelper.buildJSONParameter("loginStatus", loginStatus) + ", "
                 + DtjHelper.buildJSONParameter("resultText", resultText)
                 + "}";

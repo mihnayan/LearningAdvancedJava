@@ -1,6 +1,7 @@
 package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -85,7 +86,8 @@ class GameDataRequestHandler extends AbstractRequestHandler {
      * User data are json format:<br />
      * { "player": {<br />
      * &nbsp;&nbsp;&nbsp;&nbsp;"userName": "user name",<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;"userId": 0<br />&nbsp;&nbsp;&nbsp;&nbsp;},<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;"userId": 0,<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;"fullName": "fullname"<br />&nbsp;&nbsp;&nbsp;&nbsp;},<br />
      * "gameState": GameState,<br />
      * "loginStatus": AuthState,<br />
      * "gameData": {<br />
@@ -95,14 +97,17 @@ class GameDataRequestHandler extends AbstractRequestHandler {
     public String toJSON() {
         String userName = "";
         String userId = "";
+        String userFullName = "";
         if (session != null) {
             userName = session.getUser().getUsername();
             userId = session.getUser().getId().toString();
+            userFullName = session.getUser().getFullName();
         }
         return "{" 
                 + "\"player\": {" 
                     + DtjHelper.buildJSONParameter("userName", userName) + ", "
-                    + DtjHelper.buildJSONParameter("userId", userId) + "}, "
+                    + DtjHelper.buildJSONParameter("userId", userId) + ", "
+                    + DtjHelper.buildJSONParameter("fullName", userFullName) + "}, "
                 + DtjHelper.buildJSONParameter("gameState", gameState) + ", "
                 + DtjHelper.buildJSONParameter("loginStatus", loginStatus) + ", "
                 + "\"gameData\": " + gameDataToJSON() + "}";
@@ -115,9 +120,9 @@ class GameDataRequestHandler extends AbstractRequestHandler {
             json.append("\"elapsedTime\": ").append(gameData.getElapsedTime()).append(", ");
             json.append("\"opponents\": [");
             for (User user : gameData.getOpponents()) {
-                json.append("\"").append(user.getUsername()).append("\"");
+                json.append("\"").append(user.getFullName()).append("\",");
             }
-            json.append("]");
+            json.delete(json.length() - 1, json.length()).append("]");
         } else {
             json.append("");
         }
