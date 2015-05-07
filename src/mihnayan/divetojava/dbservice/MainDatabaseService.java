@@ -5,6 +5,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+
 import mihnayan.divetojava.accountsrv.AccountServer;
 import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.CreateServiceException;
@@ -32,6 +38,9 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     private String dbConnectionString;
     private String dbUser;
     private String dbUserPassword;
+    
+    private Configuration config;
+    private SessionFactory sessionFactory;
 
     /**
      * @param ms Real message system for interaction with other components.
@@ -52,6 +61,8 @@ public class MainDatabaseService implements DatabaseService, Runnable {
         this.ms = ms;
         address = new Address();
         ms.getAddressService().setAddress(this);
+       
+        registerHibernate();
     }
 
     @Override
@@ -98,6 +109,19 @@ public class MainDatabaseService implements DatabaseService, Runnable {
         MsgSetAuthenticationResult msg = new MsgSetAuthenticationResult(address,
                 ms.getAddressService().getAddress(AccountServer.class), username, user, resultText);
         ms.sendMessage(msg);
+    }
+    
+    private void registerHibernate() {
+        config = new Configuration();
+        config.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        config.addAnnotatedClass(User.class);
+        
+        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
+        builder.applySettings(config.getProperties());
+        ServiceRegistry serviceRegistry = builder.build();
+        
+        sessionFactory = config.buildSessionFactory(serviceRegistry);
+        
     }
 
 }

@@ -1,17 +1,31 @@
 package mihnayan.divetojava.base;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+
 
 /**
  * Represents a single entry in the table 'USER'.
  * @author Mikhail Mangushev (Mihnayan)
  */
+@Entity
+@Table(name="user")
 public final class User {
 
-    private UserId id;
+    @Id
+    @Column(name="id")
+    private String id;
+    
+    @Column(name="username")
     private String username;
+    
+    @Column(name="fullname")
     private String fullName;
 
-    public User(UserId id, String username) {
+    public User(String id, String username) {
         this(username);
         this.id = id;
     }
@@ -32,7 +46,7 @@ public final class User {
         this.fullName = fullName;
     }
 
-    public UserId getId() {
+    public String getId() {
         return id;
     }
 

@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import mihnayan.divetojava.base.User;
-import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.dbservice.Executor;
 import mihnayan.divetojava.dbservice.UserDAO;
 
@@ -97,7 +96,7 @@ public final class DBTest {
             printUser(bond);
             
             System.out.println("\n jbond by id: ");
-            UserId bondId = bond.getId();
+            String bondId = bond.getId();
             printUser(UserDAO.get(con, bondId));
             
         } catch (SQLException e) {

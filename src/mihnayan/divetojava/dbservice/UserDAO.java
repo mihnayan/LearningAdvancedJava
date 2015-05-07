@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mihnayan.divetojava.base.User;
-import mihnayan.divetojava.base.UserId;
 
 public class UserDAO {
     
@@ -32,15 +31,14 @@ public class UserDAO {
         public User handle(ResultSet resultSet) throws SQLException {
             User dataSet = null;
             if (resultSet.next()) {
-                UserId id = new UserId(resultSet.getString(P_KEY));
-                dataSet = new User(id, resultSet.getString(FIELD_USERNAME));
+                dataSet = new User(resultSet.getString(P_KEY), resultSet.getString(FIELD_USERNAME));
                 dataSet.setFullName(resultSet.getString(FIELD_FULLNAME));
             }
             return dataSet;
         }
     };
     
-    public static User get(Connection conn, UserId id) throws SQLException {
+    public static User get(Connection conn, String id) throws SQLException {
         String sql = String.format(SELECT_QUERY_PATTERN + " where %s=?", "*", TABLE, P_KEY);
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setString(1, id.toString());
@@ -66,8 +64,7 @@ public class UserDAO {
                 User dataSet = null;
                 List<User> list = new ArrayList<>();
                 while (resultSet.next()) {
-                    UserId id = new UserId(resultSet.getString(P_KEY));
-                    dataSet = new User(id, resultSet.getString(FIELD_USERNAME));
+                    dataSet = new User(resultSet.getString(P_KEY), resultSet.getString(FIELD_USERNAME));
                     dataSet.setFullName(resultSet.getString(FIELD_FULLNAME));
                     list.add(dataSet);
                 }
@@ -83,7 +80,7 @@ public class UserDAO {
         stmt.executeUpdate();
     }
 
-    public static void delete(Connection conn, UserId id) throws SQLException {
+    public static void delete(Connection conn, String id) throws SQLException {
         String sql = String.format(DELETE_QUERY_PATTERN, P_KEY);
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setString(1, id.toString());

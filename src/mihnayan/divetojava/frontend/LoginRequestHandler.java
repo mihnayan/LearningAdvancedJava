@@ -16,7 +16,6 @@ import mihnayan.divetojava.base.Address;
 import mihnayan.divetojava.base.Frontend;
 import mihnayan.divetojava.base.MessageService;
 import mihnayan.divetojava.base.User;
-import mihnayan.divetojava.base.UserId;
 import mihnayan.divetojava.base.UserSession;
 import mihnayan.divetojava.utils.DtjHelper;
 
@@ -44,7 +43,7 @@ class LoginRequestHandler extends AbstractRequestHandler {
     
     private String sessionId;
     private String userName;
-    private UserId userId;
+    private String userId;
     private String userFullName;
     private AuthState loginStatus;
     private String resultText;
