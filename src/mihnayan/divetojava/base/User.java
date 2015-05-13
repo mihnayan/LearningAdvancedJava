@@ -24,6 +24,10 @@ public final class User {
     
     @Column(name="fullname")
     private String fullName;
+    
+    public User() {
+        
+    }
 
     public User(String id, String username) {
         this(username);

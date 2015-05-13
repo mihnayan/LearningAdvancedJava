@@ -1,11 +1,7 @@
 package mihnayan.divetojava.dbservice;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.logging.Logger;
 
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -35,6 +31,7 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     private MessageService ms;
     private Address address;
     
+    private String jdbcDriverClass;
     private String dbConnectionString;
     private String dbUser;
     private String dbUserPassword;
@@ -50,11 +47,13 @@ public class MainDatabaseService implements DatabaseService, Runnable {
         try {
             DBConnectionResource connectionResource = (DBConnectionResource)
                     ResourceFactory.instance().get(DBConnectionResource.class);
-            Class.forName(connectionResource.getDriverClass());
             
+            jdbcDriverClass = connectionResource.getDriverClass();
             dbConnectionString = connectionResource.getConnectionString();
             dbUser = connectionResource.getUserName();
             dbUserPassword = connectionResource.getPassword();
+            Class.forName(jdbcDriverClass);
+            
         } catch (ClassNotFoundException | ResourceNotExistException e) {
             throw new CreateServiceException(e);
         }
@@ -89,23 +88,8 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     
     @Override
     public void requestUserByName(String username) {
-        User user = null;
+        User user = UserDAO.getByUsername(sessionFactory, username);
         String resultText = "";
-        try (Connection conn = 
-                DriverManager.getConnection(dbConnectionString, dbUser, dbUserPassword)) {
-            try {
-                user =  UserDAO.getByUsername(conn, username);
-            } catch (SQLException e) {
-                resultText = "An error occurred when trying to retrieve user from database";
-                log.warning(resultText);
-                log.warning(e.getMessage());
-            }
-        } catch (SQLException er) {
-            resultText = "Database connection error";
-            log.warning(resultText);
-            log.warning(er.getMessage());
-        }
-        
         MsgSetAuthenticationResult msg = new MsgSetAuthenticationResult(address,
                 ms.getAddressService().getAddress(AccountServer.class), username, user, resultText);
         ms.sendMessage(msg);
@@ -114,6 +98,12 @@ public class MainDatabaseService implements DatabaseService, Runnable {
     private void registerHibernate() {
         config = new Configuration();
         config.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        config.setProperty("hibernate.show_sql", "true");
+        config.setProperty("hibernate.connection.driver_class", this.jdbcDriverClass);
+        config.setProperty("hibernate.connection.url", this.dbConnectionString);
+        config.setProperty("hibernate.connection.username", this.dbUser);
+        config.setProperty("hibernate.connection.password", this.dbUserPassword);
+        
         config.addAnnotatedClass(User.class);
         
         StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();

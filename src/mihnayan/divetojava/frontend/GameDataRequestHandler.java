@@ -1,7 +1,6 @@
 package mihnayan.divetojava.frontend;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,10 +27,11 @@ class GameDataRequestHandler extends AbstractRequestHandler {
 
     private static Logger log = Logger.getLogger(GameDataRequestHandler.class
             .getName());
+    
+    private static GameState gameState = GameState.WAITING_FOR_QUORUM;  
 
     private UserSession session;
     private AuthState loginStatus = AuthState.FAILED;
-    private GameState gameState = GameState.WAITING_FOR_QUORUM;  
     private GameData gameData;
     
     private final MessageService ms;

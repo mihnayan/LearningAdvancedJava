@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+
 import mihnayan.divetojava.base.User;
 
 public class UserDAO {
@@ -46,6 +49,13 @@ public class UserDAO {
         return Executor.execQuery(stmt, resultHandler);
     }
     
+    public static User get(SessionFactory sessionFactory, String id) {
+        Session session = sessionFactory.openSession();
+        User user = (User) session.load(User.class, id);
+        session.close();
+        return user;
+    }
+    
     public static User getByUsername(Connection conn, String username) throws SQLException {
         String sql = String.format(SELECT_QUERY_PATTERN
                 + " where %s=?", "*", TABLE, FIELD_USERNAME);
@@ -53,6 +63,14 @@ public class UserDAO {
         stmt.setString(1, username);
         
         return Executor.execQuery(stmt, resultHandler);
+    }
+    
+    public static User getByUsername(SessionFactory sessionFactory, String username) {
+        Session session = sessionFactory.openSession();
+        User user = (User) session.createQuery("from User where username = :userName")
+                .setString("userName", username).uniqueResult();
+        session.close();
+        return user;
     }
     
     public static List<User> getUsers(Connection conn) throws SQLException {
