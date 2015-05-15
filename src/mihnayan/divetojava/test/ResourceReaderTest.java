@@ -1,5 +1,12 @@
 package mihnayan.divetojava.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import mihnayan.divetojava.resourcesystem.GameSessionResource;
 import mihnayan.divetojava.resourcesystem.Resource;
 import mihnayan.divetojava.resourcesystem.ResourceFactory;
@@ -12,35 +19,29 @@ import mihnayan.divetojava.resourcesystem.ResourceNotExistException;
  */
 public final class ResourceReaderTest {
 
-    /**
-     * Entry point of ResourceReaderTest class.
-     * @param args No parameters are required.
-     */
-    public static void main(String[] args) {
-
-        Resource resource = null;
-
-        ResourceFactory resFactory = ResourceFactory.instance();
-        try {
-            resFactory.loadResources();
-            resource = resFactory.get(GameSessionResource.class);
-            System.out.println(((GameSessionResource) resource)
-                    .getBoardGridSize());
-            System.out.println(((GameSessionResource) resource)
-                    .getMinPlayers());
-            System.out.println(((GameSessionResource) resource)
-                    .getMaxPlayers());
-
-        } catch (ResourceNotExistException e) {
-            e.printStackTrace();
-        } catch (ResourceLoadingException e) {
-            System.out.println("Can't load resources!");
-            e.printStackTrace();
-        }
-
+    private ResourceFactory resourceFactory;
+    
+    @Before
+    public void setUp() throws ResourceLoadingException {
+        resourceFactory = ResourceFactory.instance();
+        resourceFactory.loadResources();
     }
-
-    private ResourceReaderTest() {
-
+    
+    @Test
+    public void gameSessionResourceTest() throws ResourceNotExistException {
+        Resource resource = resourceFactory.get(GameSessionResource.class);
+        assertNotNull(resource);
+        assertEquals(GameSessionResource.class, resource.getClass());
+        
+        GameSessionResource GSResource = (GameSessionResource) resource;
+        int boardGridSize = GSResource.getBoardGridSize();
+        assertTrue(boardGridSize > 0);
+        
+        int minPlayers = GSResource.getMinPlayers();
+        assertTrue(minPlayers > 0);
+        
+        int maxPlayers = GSResource.getMaxPlayers();
+        assertTrue(maxPlayers > 0);
     }
+    
 }

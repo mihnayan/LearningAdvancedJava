@@ -1,6 +1,11 @@
 package mihnayan.divetojava.test;
 
+import static org.junit.Assert.*;
+
 import java.util.Iterator;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import mihnayan.divetojava.utils.VFS;
 import mihnayan.divetojava.utils.VFSImpl;
@@ -10,6 +15,45 @@ import mihnayan.divetojava.utils.VFSImpl;
  * @author Mikhail Mangushev (Mihnayan)
  */
 public final class VFSTest {
+    
+    private VFS vfs;
+    
+    @Before
+    public void setUp() {
+        vfs = new VFSImpl("src\\mihnayan\\divetojava\\");
+    }
+    
+    @Test
+    public void isExistsFile() {
+        boolean isExistsFile = vfs.isExist("test\\VFSTest.java");
+        assertTrue(isExistsFile);
+        
+        isExistsFile = vfs.isExist("VFSTest.java");
+        assertFalse(isExistsFile);
+        
+        isExistsFile = vfs.isExist("test");
+        assertTrue(isExistsFile);
+    }
+    
+    @Test
+    public void isDirectory() {
+        boolean isDir = vfs.isDirectory("test\\VFSTest.java");
+        assertFalse(isDir);
+        
+        isDir = vfs.isDirectory("VFSTest.java");
+        assertFalse(isDir);
+        
+        isDir = vfs.isDirectory("test");
+        assertTrue(isDir);
+    }
+    
+    @Test
+    public void checkAbsolutePath() {
+        String path = "C:\\_work\\_learning\\_java\\DiveToJava\\code\\DiveToJava\\src\\mihnayan\\"
+                + "divetojava\\test\\VFSTest.java";
+        String absolutePath = vfs.getAbsolutePath("test\\VFSTest.java");
+        assertEquals(path, absolutePath);
+    }
 
     /**
      * Entry point of VFSTest class.
@@ -17,19 +61,7 @@ public final class VFSTest {
      */
     public static void main(String[] args) {
         VFS vfs = new VFSImpl("src\\mihnayan\\divetojava\\");
-
-        System.out.println(vfs.isExist("test\\VFSTest.java")); // true
-        System.out.println(vfs.isExist("VFSTest.java")); // false
-        System.out.println(vfs.isExist("test")); // true
-
-        System.out.println();
-
-        System.out.println(vfs.isDirectory("test\\VFSTest.java")); // false
-        System.out.println(vfs.isDirectory("VFSTest.java")); // false
-        System.out.println(vfs.isDirectory("test")); // true
-
-        System.out.println(vfs.getAbsolutePath("test\\VFSTest.java"));
-
+        
         VFS vfs2 = new VFSImpl("for_test\\");
 
         System.out.println(vfs2.isExist("bytes.txt"));
@@ -57,9 +89,5 @@ public final class VFSTest {
         while (files.hasNext()) {
             System.out.println(files.next());
         }
-    }
-
-    private VFSTest() {
-
     }
 }
